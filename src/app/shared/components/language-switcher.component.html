@@ -1,0 +1,7 @@
+    <button
+      (click)="toggle()"
+      [title]="i18n.lang() === 'en' ? 'التحويل إلى العربية' : 'Switch to English'"
+      class="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+      <i class="pi pi-globe text-primary-600 text-sm"></i>
+      <span>{{ i18n.lang() === 'en' ? 'العربية' : 'English' }}</span>
+    </button>

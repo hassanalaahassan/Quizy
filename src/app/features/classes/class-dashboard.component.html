@@ -1,0 +1,326 @@
+    <div class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      @if (currentClass()) {
+        <!-- Top Navigation -->
+        <header class="border-b border-slate-200 bg-white/85 backdrop-blur-md sticky top-0 z-20 px-6 py-4">
+          <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <button
+                (click)="goBack()"
+                class="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-xs"
+                [title]="i18n.t('nav.backToClassrooms')">
+                <i class="pi pi-arrow-left rtl-flip"></i>
+              </button>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h1 class="text-2xl font-black text-slate-900 tracking-tight">{{ currentClass()!.name }}</h1>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    {{ i18n.t('nav.dashboard') }}
+                  </span>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">{{ i18n.t('dashboard.title') }}</span>
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="flex items-center gap-2.5">
+              <app-language-switcher />
+              <button
+                (click)="goToTeams()"
+                class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs">
+                <i class="pi pi-users text-cyan-600"></i>
+                <span class="hidden sm:inline">{{ i18n.t('dashboard.manageTeams') }}</span> ({{ teams().length }})
+              </button>
+              <button
+                (click)="goToQuestions()"
+                class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs">
+                <i class="pi pi-question-circle text-emerald-600"></i>
+                <span class="hidden sm:inline">{{ i18n.t('dashboard.manageQuestions') }}</span> ({{ questions().length }})
+              </button>
+              <button
+                (click)="goToNewSession()"
+                class="px-4 py-2 rounded-xl gradient-bg text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-500/20 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer">
+                <i class="pi pi-play text-xs"></i>
+                <span>{{ i18n.t('dashboard.newSession') }}</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+          <!-- Active / Paused Session Hero Banner -->
+          @if (activeOrPausedSession(); as active) {
+            <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-amber-50 via-indigo-50/50 to-white border border-amber-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div class="flex items-start gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 shadow-xs">
+                  <i class="pi pi-play text-2xl text-amber-600"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500 text-white shadow-xs">
+                      {{ active.status === 'paused' ? i18n.t('dashboard.statusPaused') : i18n.t('dashboard.statusInProgress') }}
+                    </span>
+                    <span class="text-xs text-slate-500 font-semibold">
+                      {{ i18n.t('dashboard.stoppedAt', { curr: active.currentQuestionIndex + 1, total: active.questionIds.length }) }}
+                    </span>
+                  </div>
+                  <h2 class="text-xl sm:text-2xl font-bold text-slate-900">{{ active.name }}</h2>
+                  <p class="text-xs sm:text-sm text-slate-600 mt-1">
+                    {{ i18n.t('dashboard.progressPreserved') }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 shrink-0">
+                <button
+                  (click)="continueSession(active.id)"
+                  class="px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm sm:text-base shadow-md shadow-amber-500/25 hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer">
+                  <i class="pi pi-play-circle text-lg"></i>
+                  <span>{{ i18n.t('dashboard.continueSession') }}</span>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Metric Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="glass-card p-5">
+              <div class="flex items-center justify-between text-slate-500 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider">{{ i18n.t('dashboard.totalTeams') }}</span>
+                <i class="pi pi-users text-cyan-600"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-slate-900">{{ teams().length }}</div>
+              <span class="text-xs text-slate-400 mt-1 block">{{ i18n.t('dashboard.activeInClass') }}</span>
+            </div>
+
+            <div class="glass-card p-5">
+              <div class="flex items-center justify-between text-slate-500 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider">{{ i18n.t('dashboard.combinedScore') }}</span>
+                <i class="pi pi-trophy text-amber-500"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-amber-600">{{ combinedScore() }}</div>
+              <span class="text-xs text-slate-400 mt-1 block">{{ i18n.t('dashboard.cumulativePoints') }}</span>
+            </div>
+
+            <div class="glass-card p-5">
+              <div class="flex items-center justify-between text-slate-500 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider">{{ i18n.t('dashboard.questionBank') }}</span>
+                <i class="pi pi-list text-emerald-600"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-slate-900">{{ questions().length }}</div>
+              <span class="text-xs text-slate-400 mt-1 block">{{ i18n.t('dashboard.availableChallenges') }}</span>
+            </div>
+
+            <div class="glass-card p-5">
+              <div class="flex items-center justify-between text-slate-500 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider">{{ i18n.t('classes.sessions') }}</span>
+                <i class="pi pi-history text-indigo-600"></i>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-slate-900">{{ sessions().length }}</div>
+              <span class="text-xs text-slate-400 mt-1 block">{{ completedSessionsCount() }} {{ i18n.t('classes.completed') }}</span>
+            </div>
+          </div>
+
+          <!-- Two Column Layout: Sessions History & Teams Leaderboard -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left 2 Cols: Gameplay Sessions History -->
+            <div class="lg:col-span-2 space-y-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="pi pi-history text-indigo-600"></i>
+                    <span>{{ i18n.t('dashboard.sessionsTitle') }}</span>
+                  </h2>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    {{ i18n.t('dashboard.sessionsSubtitle') }}
+                  </p>
+                </div>
+
+                <button
+                  (click)="goToNewSession()"
+                  class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer">
+                  <i class="pi pi-plus text-xs"></i>
+                  <span>{{ i18n.t('dashboard.newSession') }}</span>
+                </button>
+              </div>
+
+              <!-- Sessions List -->
+              @if (sessions().length > 0) {
+                <div class="space-y-3">
+                  @for (s of sessions(); track s.id) {
+                    <div class="glass-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-slate-300">
+                      <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                          <span
+                            class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider"
+                            [class]="statusBadgeClass(s.status)">
+                            {{ statusBadgeText(s.status) }}
+                          </span>
+                          <span class="text-xs text-slate-400 font-medium">
+                            {{ formatDate(s.createdAt) }}
+                          </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900">{{ s.name }}</h3>
+                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                          <span>
+                            <i class="pi pi-question-circle mr-1 text-indigo-500"></i>
+                            {{ s.questionIds.length }} {{ i18n.t('classes.questions') }}
+                          </span>
+                          @if (s.status === 'in_progress' || s.status === 'paused') {
+                            <span class="text-amber-700 font-bold">
+                              <i class="pi pi-hourglass mr-1"></i>
+                              {{ i18n.t('dashboard.stoppedAt', { curr: s.currentQuestionIndex + 1, total: s.questionIds.length }) }}
+                            </span>
+                          }
+                          @if (s.completedAt) {
+                            <span class="text-emerald-600 font-semibold">
+                              <i class="pi pi-check mr-1"></i> {{ i18n.t('dashboard.statusCompleted') }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+
+                      <!-- Action Button per session -->
+                      <div class="flex items-center gap-2 shrink-0">
+                        @if (s.status === 'in_progress' || s.status === 'paused') {
+                          <button
+                            (click)="continueSession(s.id)"
+                            class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs">
+                            <i class="pi pi-play"></i>
+                            <span>{{ i18n.t('dashboard.continue') }}</span>
+                          </button>
+                        } @else if (s.status === 'completed') {
+                          <button
+                            (click)="viewResults(s.id)"
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all">
+                            <i class="pi pi-chart-bar text-cyan-600"></i>
+                            <span>{{ i18n.t('dashboard.viewResults') }}</span>
+                          </button>
+                        } @else {
+                          <button
+                            (click)="continueSession(s.id)"
+                            class="px-4 py-2 rounded-xl gradient-bg text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs">
+                            <i class="pi pi-play"></i>
+                            <span>{{ i18n.t('dashboard.start') }}</span>
+                          </button>
+                        }
+
+                        <button
+                          (click)="confirmDeleteSession(s)"
+                          [title]="i18n.t('common.delete')"
+                          class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
+                          <i class="pi pi-trash text-xs"></i>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="glass-card p-8 text-center border-dashed border-slate-300">
+                  <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
+                    <i class="pi pi-play-circle text-2xl"></i>
+                  </div>
+                  <h3 class="text-base font-bold text-slate-900 mb-1">{{ i18n.t('dashboard.noSessionsYet') }}</h3>
+                  <p class="text-slate-500 text-xs mb-4 max-w-sm mx-auto">
+                    {{ i18n.t('dashboard.noSessionsDesc') }}
+                  </p>
+                  <button
+                    (click)="goToNewSession()"
+                    class="px-4 py-2 rounded-xl gradient-bg text-white text-xs font-bold shadow-sm cursor-pointer">
+                    <i class="pi pi-plus mr-1"></i> {{ i18n.t('dashboard.startFirstSession') }}
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Right Col: Leaderboard & Teams Snapshot -->
+            <div class="space-y-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="pi pi-trophy text-amber-500"></i>
+                    <span>{{ i18n.t('dashboard.teamStandings') }}</span>
+                  </h2>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    {{ i18n.t('dashboard.standingsSubtitle') }}
+                  </p>
+                </div>
+
+                <button
+                  (click)="goToTeams()"
+                  class="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer">
+                  {{ i18n.t('dashboard.manageTeams') }}
+                </button>
+              </div>
+
+              <!-- Ranked Teams List -->
+              @if (teamsDetails().length > 0) {
+                <div class="space-y-2.5">
+                  @for (t of sortedTeams(); track t.team.id; let idx = $index) {
+                    <div class="glass-card p-4 flex items-center justify-between gap-3">
+                      <div class="flex items-center gap-3">
+                        <div
+                          class="w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shrink-0"
+                          [class]="idx === 0 ? 'bg-amber-100 text-amber-800 border border-amber-300' : idx === 1 ? 'bg-slate-200 text-slate-700' : idx === 2 ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-slate-100 text-slate-500'">
+                          #{{ idx + 1 }}
+                        </div>
+                        <div>
+                          <h4 class="text-sm font-bold text-slate-900 leading-tight">{{ t.team.name }}</h4>
+                          <span class="text-xs text-slate-500">
+                            {{ i18n.t('dashboard.leader') }}: <strong class="text-slate-700">{{ getLeaderName(t) }}</strong>
+                            · {{ t.members.length }} {{ i18n.t('dashboard.members') }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="text-right shrink-0">
+                        <div class="text-lg font-black" [class]="t.team.totalScore >= 0 ? 'text-amber-600' : 'text-red-600'">
+                          {{ t.team.totalScore }} {{ i18n.t('questions.points') }}
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="glass-card p-6 text-center">
+                  <p class="text-xs text-slate-500 mb-3">{{ i18n.t('dashboard.noTeamsYet') }}</p>
+                  <button
+                    (click)="goToTeams()"
+                    class="px-3.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold cursor-pointer">
+                    {{ i18n.t('dashboard.addTeams') }}
+                  </button>
+                </div>
+              }
+
+              <!-- Question Bank Summary Card -->
+              <div class="glass-card p-5 border border-slate-200">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                    <i class="pi pi-book text-emerald-600"></i>
+                    <span>{{ i18n.t('dashboard.questionBank') }}</span>
+                  </h3>
+                  <span class="text-xs text-slate-400 font-semibold">{{ questions().length }} ready</span>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed mb-4 font-normal">
+                  {{ i18n.t('questions.overview') }}
+                </p>
+                <button
+                  (click)="goToQuestions()"
+                  class="w-full py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                  <span>{{ i18n.t('dashboard.openQuestionBank') }}</span>
+                  <i class="pi pi-arrow-right rtl-flip text-[10px]"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      } @else {
+        <!-- Not Found -->
+        <div class="flex-1 flex flex-col items-center justify-center p-8">
+          <h2 class="text-xl font-bold text-slate-900 mb-2">Classroom not found</h2>
+          <button (click)="goBack()" class="text-indigo-600 hover:underline text-sm font-bold cursor-pointer">
+            {{ i18n.t('nav.backToClassrooms') }}
+          </button>
+        </div>
+      }
+    </div>

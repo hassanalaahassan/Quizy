@@ -1,0 +1,206 @@
+    <div class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <!-- Top Bar -->
+      <header class="border-b border-slate-200 bg-white/85 backdrop-blur-md sticky top-0 z-20 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button
+              (click)="goBack()"
+              class="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-xs"
+              [title]="i18n.t('nav.backToDashboard')">
+              <i class="pi pi-arrow-left rtl-flip"></i>
+            </button>
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">{{ i18n.t('setup.title') }}</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  {{ currentClass()?.name || 'Classroom' }}
+                </span>
+              </div>
+              <span class="text-xs text-slate-500 font-medium">{{ i18n.t('setup.subtitle') }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <app-language-switcher />
+            <button
+              (click)="saveAndPlay()"
+              [disabled]="selectedQuestionIds().length === 0 || !sessionName.trim()"
+              class="px-5 py-2.5 rounded-xl gradient-bg text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-500/20 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="pi pi-play text-xs"></i>
+              <span>{{ i18n.t('setup.launchArena') }}</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Body -->
+      <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Left 2 Cols: Session Details & Question Picker -->
+          <div class="lg:col-span-2 space-y-6">
+            <!-- Session Name Card -->
+            <div class="glass-card p-6 border border-slate-200">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                {{ i18n.t('setup.sessionTitleLabel') }}
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="sessionName"
+                placeholder="e.g., Session 1: Science & General Knowledge"
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white text-slate-900 text-base font-bold outline-none" />
+            </div>
+
+            <!-- Question Picker Card -->
+            <div class="glass-card p-6 border border-slate-200">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i class="pi pi-list-check text-cyan-600"></i>
+                    <span>{{ i18n.t('setup.selectQuestionsTitle') }}</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    {{ i18n.t('setup.selectQuestionsDesc') }}
+                  </p>
+                </div>
+
+                <!-- Select All / Clear -->
+                <div class="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    (click)="selectAllQuestions()"
+                    class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-colors cursor-pointer border border-slate-200">
+                    {{ i18n.t('setup.selectAll') }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="clearSelectedQuestions()"
+                    class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-colors cursor-pointer border border-slate-200">
+                    {{ i18n.t('setup.clear') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Questions List -->
+              @if (availableQuestions().length > 0) {
+                <div class="space-y-3">
+                  @for (q of availableQuestions(); track q.id; let idx = $index) {
+                    <div
+                      (click)="toggleQuestion(q.id)"
+                      [class]="isQuestionSelected(q.id) ? 'border-indigo-500 bg-indigo-50/40 shadow-xs' : 'border-slate-200 bg-white hover:border-slate-300'"
+                      class="p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-4">
+                      <!-- Checkbox / Selection circle -->
+                      <div
+                        class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-all text-xs"
+                        [class]="isQuestionSelected(q.id) ? 'bg-indigo-600 text-white font-bold' : 'border border-slate-300 bg-slate-100 text-transparent'">
+                        <i class="pi pi-check text-[10px]"></i>
+                      </div>
+
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                          <span class="text-xs font-bold text-slate-400">#{{ idx + 1 }}</span>
+                          <span class="text-xs font-black text-amber-800 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200">
+                            {{ q.points }} {{ i18n.t('questions.points') }}
+                          </span>
+                          <span class="text-xs text-indigo-700 font-bold px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200">
+                            {{ formatTimer(q.timerSeconds) }}
+                          </span>
+                          <span class="text-[11px] text-slate-400 font-medium">
+                            {{ q.penaltyMode === 'deduct' ? i18n.t('questions.penaltyDeduct', { points: q.points }) : i18n.t('questions.penaltyNone') }}
+                          </span>
+                        </div>
+
+                        <p class="text-sm font-bold text-slate-900 leading-snug">
+                          {{ q.text }}
+                        </p>
+
+                        <div class="mt-2 text-xs text-slate-500 font-medium">
+                          {{ q.options.length }} options · {{ i18n.t('questions.correctAnswer') }}: {{ q.options[q.correctOptionIndex]?.text }}
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                  <p class="text-sm text-slate-600 mb-3">{{ i18n.t('setup.emptyBank') }}</p>
+                  <button
+                    (click)="goToQuestions()"
+                    class="px-4 py-2 rounded-xl gradient-bg text-white text-xs font-bold cursor-pointer">
+                    {{ i18n.t('setup.goToBank') }}
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Right Col: Session Summary & Teams Preview -->
+          <div class="space-y-6">
+            <!-- Summary Card -->
+            <div class="glass-card p-6 border border-slate-200">
+              <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-4">
+                <i class="pi pi-info-circle text-indigo-600"></i>
+                <span>{{ i18n.t('setup.summaryTitle') }}</span>
+              </h3>
+
+              <div class="space-y-3 mb-6">
+                <div class="flex items-center justify-between text-xs py-2 border-b border-slate-100">
+                  <span class="text-slate-500 font-medium">{{ i18n.t('setup.selectedQuestions') }}</span>
+                  <span class="font-black text-slate-900 text-sm">{{ selectedQuestionIds().length }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs py-2 border-b border-slate-100">
+                  <span class="text-slate-500 font-medium">{{ i18n.t('setup.totalPotentialPoints') }}</span>
+                  <span class="font-black text-amber-600 text-sm">{{ totalPoints() }} {{ i18n.t('questions.points') }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs py-2 border-b border-slate-100">
+                  <span class="text-slate-500 font-medium">{{ i18n.t('setup.estPlaytime') }}</span>
+                  <span class="font-black text-cyan-700 text-sm">{{ formatTimer(totalTimerSeconds()) }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs py-2">
+                  <span class="text-slate-500 font-medium">{{ i18n.t('setup.participatingTeams') }}</span>
+                  <span class="font-black text-slate-900 text-sm">{{ teams().length }} {{ i18n.t('classes.teams') }}</span>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="space-y-3">
+                <button
+                  (click)="saveAndPlay()"
+                  [disabled]="selectedQuestionIds().length === 0 || !sessionName.trim()"
+                  class="w-full py-3 rounded-xl gradient-bg text-white font-bold text-sm shadow-md shadow-indigo-500/25 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i class="pi pi-play"></i>
+                  <span>{{ i18n.t('setup.launchArena') }}</span>
+                </button>
+
+                <button
+                  (click)="saveForLater()"
+                  [disabled]="selectedQuestionIds().length === 0 || !sessionName.trim()"
+                  class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer border border-slate-200 disabled:opacity-50">
+                  {{ i18n.t('setup.saveLater') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Teams in Competition Snapshot -->
+            <div class="glass-card p-5 border border-slate-200">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {{ i18n.t('setup.participatingTeams') }}
+                </h4>
+                <span class="text-xs text-slate-400 font-semibold">{{ teams().length }} ready</span>
+              </div>
+
+              <div class="space-y-2">
+                @for (t of teams(); track t.id) {
+                  <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                    <span class="font-bold text-slate-800">{{ t.name }}</span>
+                    <span class="font-black text-amber-600">{{ t.totalScore }} {{ i18n.t('questions.points') }}</span>
+                  </div>
+                } @empty {
+                  <p class="text-xs text-slate-400 italic">{{ i18n.t('teams.emptyTitle') }}</p>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>

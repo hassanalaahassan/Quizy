@@ -1,0 +1,179 @@
+    @if (currentQuestion(); as q) {
+      <div>
+        <!-- Badges & Timer Strip -->
+        <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-3 sm:px-3.5 py-1 rounded-xl bg-amber-500 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-xs">
+              <i class="pi pi-star-fill text-xs"></i>
+              {{ q.points }} {{ i18n.t('gameplay.points') }}
+            </span>
+
+            <span
+              class="px-2.5 sm:px-3 py-1 rounded-xl text-xs font-bold"
+              [class]="q.penaltyMode === 'deduct' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-white text-slate-600 border border-slate-200'">
+              {{ q.penaltyMode === 'deduct' ? i18n.t('gameplay.wrongDeduct', { points: q.points }) : i18n.t('gameplay.wrongNone') }}
+            </span>
+
+            <!-- Green Card Reward Badge -->
+            @if (q.isGreenCardReward) {
+              <span class="px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-700 font-bold text-xs flex items-center gap-1 shadow-xs">
+                <i class="pi pi-gift text-xs"></i>
+                {{ i18n.t('gameplay.greenCardRewardQuestion') }}
+              </span>
+            }
+
+            @if (activeCard(); as card) {
+              <span class="px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-700 font-bold text-xs flex items-center gap-1 green-card-glow shadow-xs">
+                <i class="pi pi-bolt text-xs"></i>
+                {{ i18n.t('gameplay.powerCardActive', { card: getCardLabel(card.cardType) }) }}
+              </span>
+            }
+          </div>
+
+          <!-- Prominent Countdown Display -->
+          <div class="flex items-center gap-2">
+            <div
+              class="px-3 sm:px-4 py-1.5 rounded-2xl font-black text-lg sm:text-2xl tracking-wider flex items-center gap-2 border transition-all duration-300 shadow-sm"
+              [class]="timerRemaining() <= 5 && timerRemaining() > 0 ? 'bg-red-50 text-red-600 border-red-300 animate-pulse' : timerRemaining() <= 10 && timerRemaining() > 0 ? 'bg-amber-50 text-amber-600 border-amber-300' : 'bg-white text-slate-800 border-slate-200'">
+              <i class="pi pi-clock text-base sm:text-lg"></i>
+              <span>{{ formatTime(timerRemaining()) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer Progress Bar -->
+        <div class="w-full h-2 rounded-full bg-slate-200 overflow-hidden mb-4 sm:mb-6">
+          <div
+            class="h-full transition-all duration-1000 ease-linear rounded-full"
+            [class]="timerRemaining() <= 5 ? 'bg-red-500' : timerRemaining() <= 10 ? 'bg-amber-500' : 'gradient-bg'"
+            [style.width.%]="timerProgress()"></div>
+        </div>
+
+        <!-- Main Question Box -->
+        <div class="bg-white p-6 sm:p-8 md:p-12 rounded-3xl border border-slate-200 shadow-xl relative overflow-hidden mb-4 sm:mb-6">
+          <h2 class="text-xl sm:text-3xl lg:text-5xl font-extrabold text-slate-900 text-center leading-relaxed tracking-tight">
+            {{ q.text }}
+          </h2>
+        </div>
+
+        <!-- Answer Options Grid / Text Answer Input -->
+        @if (q.options && q.options.length > 0) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            @for (opt of q.options; track $index; let optIdx = $index) {
+              <div
+                (click)="teacherSelectAnswer(optIdx)"
+                [class]="getOptionCardClass(optIdx)"
+                class="p-4 sm:p-5 md:p-6 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 sm:gap-4 group shadow-sm hover:shadow-md">
+                <div class="flex items-center gap-3 sm:gap-4">
+                  <div
+                    [class]="getOptionBadgeClass(optIdx)"
+                    class="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl font-black text-base sm:text-lg md:text-xl flex items-center justify-center shrink-0 shadow-xs transition-transform group-hover:scale-105">
+                    {{ ['A', 'B', 'C', 'D', 'E', 'F'][optIdx] }}
+                  </div>
+                  <span class="text-sm sm:text-base md:text-xl font-bold text-slate-900">
+                    {{ opt.text }}
+                  </span>
+                </div>
+
+                <!-- Evaluated outcome icon -->
+                @if (isAnswerSubmitted()) {
+                  @if (optIdx === q.correctOptionIndex) {
+                    <span class="px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500 text-white font-black text-xs uppercase flex items-center gap-1 shrink-0 shadow-xs">
+                      <i class="pi pi-check"></i> {{ i18n.t('gameplay.correct') }}
+                    </span>
+                  } @else if (lastOutcome()?.selectedOptionIndex === optIdx && !lastOutcome()?.isCorrect) {
+                    <span class="px-2.5 sm:px-3 py-1 rounded-full bg-red-500 text-white font-black text-xs uppercase flex items-center gap-1 shrink-0 shadow-xs">
+                      <i class="pi pi-times"></i> {{ i18n.t('gameplay.studentChoice') }}
+                    </span>
+                  }
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Text Answer Entry for Short Answer and Complete Questions -->
+          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-md">
+            @if (!isAnswerSubmitted()) {
+              <div class="flex flex-col sm:flex-row items-center gap-3">
+                <input
+                  type="text"
+                  [(ngModel)]="studentTextAnswer"
+                  (keyup.enter)="submitTextAnswer()"
+                  [placeholder]="i18n.t('gameplay.typeAnswerPlaceholder')"
+                  class="flex-1 w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white text-slate-900 text-base font-semibold outline-none transition-all" />
+                <button
+                  (click)="submitTextAnswer()"
+                  class="w-full sm:w-auto px-6 py-3.5 rounded-2xl gradient-bg text-white font-bold text-sm shadow-md shadow-indigo-500/20 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-2">
+                  <i class="pi pi-send text-xs"></i>
+                  <span>{{ i18n.t('gameplay.submitTextAnswer') }}</span>
+                </button>
+              </div>
+            } @else {
+              <div class="space-y-3">
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ i18n.t('gameplay.submittedAnswer') }}</span>
+                  <span class="text-base font-black text-slate-900">{{ lastOutcome()?.textAnswer || '—' }}</span>
+                </div>
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                  <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">{{ i18n.t('gameplay.expectedAnswer') }}</span>
+                  <span class="text-base font-black text-emerald-900">{{ q.correctAnswer }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ─── EVALUATION FEEDBACK OVERLAY BANNER ─── -->
+    @if (lastOutcome(); as outcome) {
+      <div
+        class="p-4 sm:p-6 rounded-2xl border shadow-xl animate-fade-in flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6"
+        [class]="outcome.isCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div
+            class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 text-2xl shadow-xs"
+            [class]="outcome.isCorrect ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'">
+            <i [class]="outcome.isCorrect ? 'pi pi-check text-2xl sm:text-3xl' : 'pi pi-times text-2xl sm:text-3xl'"></i>
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs uppercase font-black tracking-wider px-2 py-0.5 rounded shadow-2xs"
+                [class]="outcome.isCorrect ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'">
+                {{ outcome.isCorrect ? i18n.t('gameplay.correctBanner') : i18n.t('gameplay.wrongBanner') }}
+              </span>
+              <span class="text-sm font-bold text-slate-800">
+                {{ i18n.t('gameplay.byTeam', { team: outcome.teamName }) }}
+              </span>
+            </div>
+            <div class="text-lg sm:text-2xl font-black mt-1">
+              @if (outcome.pointsAwarded > 0) {
+                <span class="text-emerald-700">{{ i18n.t('gameplay.pointsAwarded', { points: outcome.pointsAwarded }) }}</span>
+              } @else if (outcome.pointsAwarded < 0) {
+                <span class="text-red-600">{{ i18n.t('gameplay.pointsDeducted', { points: outcome.pointsAwarded }) }}</span>
+              } @else {
+                <span class="text-slate-600">{{ i18n.t('gameplay.noPenaltyPoints') }}</span>
+              }
+              @if (outcome.powerCardApplied === 'double_points') {
+                <span class="text-xs ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                  {{ i18n.t('gameplay.doublePointsCardApplied') }}
+                </span>
+              }
+            </div>
+            <!-- Reward card earned notification -->
+            @if (outcome.rewardCardEarned) {
+              <div class="mt-2 px-3 py-1.5 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-card-earned">
+                <i class="pi pi-gift"></i>
+                {{ i18n.t('greenCard.rewardEarned', { team: outcome.teamName, card: getCardLabel(outcome.rewardCardEarned.cardType) }) }}
+              </div>
+            }
+            @if (outcome.rewardCardMessage && !outcome.rewardCardEarned && outcome.isCorrect && currentQuestion().isGreenCardReward) {
+              <div class="mt-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold flex items-center gap-2">
+                <i class="pi pi-info-circle"></i>
+                {{ outcome.rewardCardMessage }}
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }

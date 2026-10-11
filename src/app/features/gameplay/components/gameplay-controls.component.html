@@ -1,0 +1,150 @@
+    <div class="glass-card p-4 sm:p-5 border border-slate-200 rounded-2xl">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+        <!-- Step 1: Select Team Answering -->
+        <div class="flex-1">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <i class="pi pi-users text-cyan-600"></i>
+              <span>{{ i18n.t('gameplay.step1Title') }}</span>
+            </span>
+            @if (selectedTeam()) {
+              <span class="text-xs text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+                {{ i18n.t('gameplay.selectedTeamIndicator', { name: selectedTeam()!.name }) }}
+              </span>
+            }
+          </div>
+
+          <!-- Team Selection Buttons -->
+          <div class="flex flex-wrap gap-2">
+            @for (t of teams(); track t.id) {
+              <button
+                type="button"
+                (click)="selectTeam(t.id)"
+                [disabled]="isAnswerSubmitted()"
+                [class]="selectedTeamId() === t.id ? 'bg-indigo-600 text-white border-indigo-600 font-black shadow-md shadow-indigo-500/25' : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'"
+                class="px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                <span>{{ t.name }}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-black" [class]="selectedTeamId() === t.id ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'">
+                  {{ t.totalScore }}
+                </span>
+                <!-- Green Card indicator dot -->
+                @if (getTeamActiveCard(t.id)) {
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Has Green Card"></span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Step 2: Green Card Actions for Selected Team -->
+        @if (selectedTeam()) {
+          <div class="border-t md:border-t-0 md:border-l md:rtl:border-r md:rtl:border-l-0 border-slate-200 pt-3 md:pt-0 md:px-4 shrink-0">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
+              {{ i18n.t('gameplay.step2Title') }}
+            </span>
+            <div class="flex flex-wrap items-center gap-2">
+              @if (getTeamActiveCard(selectedTeam()!.id); as card) {
+                <!-- Card type-specific button -->
+                @if (card.cardType === 'double_points') {
+                  <button
+                    (click)="toggleDoublePointsCard(selectedTeam()!.id, card.id)"
+                    [disabled]="isAnswerSubmitted()"
+                    [class]="activeCard()?.cardId === card.id ? 'bg-emerald-600 text-white font-bold shadow-xs' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <i class="pi pi-bolt text-[10px]"></i>
+                    <span>{{ i18n.t('gameplay.cardDouble') }}</span>
+                  </button>
+                }
+
+                @if (card.cardType === 'steal_points') {
+                  <button
+                    (click)="useStealPointsCard(selectedTeam()!.id, card)"
+                    [disabled]="isAnswerSubmitted()"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <i class="pi pi-arrow-right-arrow-left text-[10px]"></i>
+                    <span>{{ i18n.t('gameplay.cardSteal') }}</span>
+                  </button>
+                }
+
+                @if (card.cardType === 'extra_time') {
+                  <button
+                    (click)="useExtraTimeCard(selectedTeam()!.id, card)"
+                    [disabled]="isAnswerSubmitted()"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <i class="pi pi-clock text-[10px]"></i>
+                    <span>{{ i18n.t('gameplay.cardExtraTime') }}</span>
+                  </button>
+                }
+
+                <!-- Grant Card button -->
+                <button
+                  (click)="openGrantCardDialog(selectedTeam()!.id)"
+                  [disabled]="isAnswerSubmitted()"
+                  class="px-2 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                  [title]="i18n.t('greenCard.grantCard')">
+                  <i class="pi pi-gift text-[10px]"></i>
+                </button>
+              } @else {
+                <span class="text-xs text-slate-400 italic font-medium">{{ i18n.t('gameplay.noCards') }}</span>
+                <!-- Grant Card button when team has no card -->
+                <button
+                  (click)="openGrantCardDialog(selectedTeam()!.id)"
+                  [disabled]="isAnswerSubmitted()"
+                  class="px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <i class="pi pi-gift text-[10px]"></i>
+                  <span>{{ i18n.t('greenCard.grantCard') }}</span>
+                </button>
+              }
+
+              @if (!isAnswerSubmitted()) {
+                <button
+                  (click)="confirmSkipQuestion()"
+                  class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold border border-slate-200 cursor-pointer ml-1 sm:ml-2">
+                  {{ i18n.t('gameplay.skipQ') }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ─── BOTTOM REAL-TIME SCOREBOARD DOCK ─── -->
+    <div class="glass-card p-3 sm:p-4 border border-slate-200 rounded-2xl mt-4 sm:mt-6">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+          <i class="pi pi-trophy text-amber-500"></i>
+          <span>{{ i18n.t('gameplay.liveLeaderboard') }}</span>
+        </span>
+        <span class="text-xs text-slate-400 font-medium">{{ i18n.t('gameplay.rankedByScore') }}</span>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+        @for (t of rankedTeams(); track t.id; let rankIdx = $index) {
+          <div
+            [class]="selectedTeamId() === t.id ? 'border-indigo-400 bg-indigo-50/50 shadow-xs' : 'border-slate-200 bg-slate-50/70'"
+            class="p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition-all">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <span
+                class="w-6 h-6 rounded-md font-black text-xs flex items-center justify-center shrink-0 shadow-2xs"
+                [class]="rankIdx === 0 ? 'bg-amber-500 text-white' : rankIdx === 1 ? 'bg-slate-300 text-slate-800' : rankIdx === 2 ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-600'">
+                {{ rankIdx + 1 }}
+              </span>
+              <div class="flex flex-col overflow-hidden">
+                <span class="text-xs font-bold text-slate-800 truncate">{{ t.name }}</span>
+                <!-- Show green card indicator -->
+                @if (getTeamActiveCard(t.id); as card) {
+                  <span class="text-[9px] text-emerald-600 font-bold flex items-center gap-0.5">
+                    <i class="pi pi-bolt text-[8px]"></i> {{ getCardLabel(card.cardType) }}
+                  </span>
+                }
+              </div>
+            </div>
+            <span class="text-sm font-black shrink-0" [class]="t.totalScore >= 0 ? 'text-amber-600' : 'text-red-600'">
+              {{ t.totalScore }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>

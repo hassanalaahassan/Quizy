@@ -1,0 +1,41 @@
+    <div class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <!-- Header -->
+      <header class="border-b border-slate-200 bg-white/85 backdrop-blur-md sticky top-0 z-20 px-6 py-4">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+          <button (click)="goBack()" class="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-xs flex items-center gap-2 text-xs font-bold">
+            <i class="pi pi-arrow-left rtl-flip"></i>
+            <span>{{ i18n.t('nav.back') }}</span>
+          </button>
+
+          <app-language-switcher />
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-10">
+        <div class="mb-10 text-center sm:text-left sm:rtl:text-right">
+          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 block mb-1">
+            {{ i18n.t('brand.title') }}
+          </span>
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            {{ i18n.t('nav.howToPlay') }}
+          </h1>
+        </div>
+
+        <div class="space-y-4">
+          @for (item of localizedInstructions(); track item.title) {
+            <div class="glass-card p-6 border border-slate-200 rounded-2xl hover:border-slate-300 transition-all">
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center shrink-0 text-xl shadow-xs">
+                  <i [class]="item.icon"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-slate-900 mb-1.5">{{ item.title }}</h3>
+                  <p class="text-slate-600 text-sm leading-relaxed font-normal">{{ item.description }}</p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </main>
+    </div>

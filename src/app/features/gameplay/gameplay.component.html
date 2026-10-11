@@ -1,0 +1,29 @@
+<div class="min-h-screen bg-slate-100 text-slate-900 flex flex-col select-none overflow-x-hidden">
+  
+  <app-gameplay-header 
+    [classId]="classId()"
+    (onPauseAndExit)="confirmPauseAndExit()">
+  </app-gameplay-header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col justify-between gap-4 sm:gap-6">
+
+    <div class="flex-1 flex flex-col">
+      <app-gameplay-question></app-gameplay-question>
+
+      @if (currentQuestion()) {
+        <!-- Big Glowing Next Question Button -->
+        <button
+          (click)="nextQuestion()"
+          class="mt-4 sm:mt-6 px-6 sm:px-8 py-3 sm:py-4 rounded-xl gradient-bg text-white font-black text-sm sm:text-base shadow-lg shadow-indigo-500/25 hover:scale-105 transition-all flex items-center justify-center gap-2 cursor-pointer border border-indigo-400/40 shrink-0">
+          <span>{{ isLastQuestion() ? i18n.t('gameplay.finishSession') : i18n.t('gameplay.nextQuestion') }}</span>
+          <i class="pi pi-arrow-right rtl-flip text-sm"></i>
+        </button>
+      }
+    </div>
+
+    <app-gameplay-controls 
+      (onSkipQuestion)="confirmSkipQuestion()">
+    </app-gameplay-controls>
+
+  </main>
+</div>
