@@ -40,4 +40,8 @@ export class GameplayHeaderComponent {
   addTime(seconds: number): void {
     this.gameplay.timerService.addSeconds(seconds);
   }
+
+  openAdjustPoints(): void {
+    this.gameplay.openAdjustPointsModal();
+  }
 }

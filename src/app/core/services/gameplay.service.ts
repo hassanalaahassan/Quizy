@@ -46,6 +46,7 @@ export class GameplayService {
   private readonly _activeCard = signal<{ teamId: string; cardId: string; cardType: PowerCardType } | null>(null);
   private readonly _lastOutcome = signal<EvaluationOutcome | null>(null);
   private readonly _isAnswerSubmitted = signal<boolean>(false);
+  private readonly _adjustingTeamId = signal<string | null>(null);
 
   // Readonly exposures
   readonly session = this._session.asReadonly();
@@ -60,6 +61,7 @@ export class GameplayService {
   readonly activeCard = this._activeCard.asReadonly();
   readonly lastOutcome = this._lastOutcome.asReadonly();
   readonly isAnswerSubmitted = this._isAnswerSubmitted.asReadonly();
+  readonly adjustingTeamId = this._adjustingTeamId.asReadonly();
 
   // Computed signals
   readonly currentQuestion = computed(() => {
@@ -168,6 +170,45 @@ export class GameplayService {
     this._teams.set(this.dataSource.getTeamsByClass(session.classId));
   }
 
+  /** Adjust team score by a delta (positive or negative). */
+  adjustTeamScore(teamId: string, delta: number): void {
+    const session = this._session();
+    if (!session) return;
+    const team = this._teams().find(t => t.id === teamId);
+    if (!team) return;
+
+    const updated: Team = {
+      ...team,
+      totalScore: team.totalScore + delta,
+    };
+    this.dataSource.saveTeam(updated);
+    this._teams.update(list => list.map(t => t.id === teamId ? updated : t));
+  }
+
+  /** Set team score to an exact value. */
+  setTeamScore(teamId: string, newScore: number): void {
+    const session = this._session();
+    if (!session) return;
+    const team = this._teams().find(t => t.id === teamId);
+    if (!team) return;
+
+    const updated: Team = {
+      ...team,
+      totalScore: newScore,
+    };
+    this.dataSource.saveTeam(updated);
+    this._teams.update(list => list.map(t => t.id === teamId ? updated : t));
+  }
+
+  openAdjustPointsModal(teamId?: string): void {
+    const targetId = teamId || this._selectedTeamId() || this._teams()[0]?.id || null;
+    this._adjustingTeamId.set(targetId);
+  }
+
+  closeAdjustPointsModal(): void {
+    this._adjustingTeamId.set(null);
+  }
+
   selectTeam(teamId: string): void {
     if (this._isAnswerSubmitted()) return;
     this._selectedTeamId.set(teamId);
@@ -222,8 +263,9 @@ export class GameplayService {
 
   /**
    * Submit a text answer for short_answer and complete question types.
+   * Can be auto-checked or overridden directly by the teacher.
    */
-  submitTextAnswer(textAnswer: string): EvaluationOutcome | null {
+  submitTextAnswer(textAnswer: string, teacherOverride?: boolean): EvaluationOutcome | null {
     const session = this._session();
     const question = this.currentQuestion();
     const teamId = this._selectedTeamId();
@@ -243,14 +285,145 @@ export class GameplayService {
     const team = this._teams().find(t => t.id === teamId);
     const teamName = team ? team.name : 'Selected Team';
 
-    // Check correctness (case-insensitive)
-    const normalizedAnswer = textAnswer.trim().toLowerCase();
-    const correctAnswer = (question.correctAnswer || '').trim().toLowerCase();
-    const accepted = (question.acceptedAnswers || []).map(a => a.trim().toLowerCase());
-
-    const isCorrect = normalizedAnswer === correctAnswer || accepted.includes(normalizedAnswer);
+    let isCorrect: boolean;
+    if (teacherOverride !== undefined) {
+      isCorrect = teacherOverride;
+    } else {
+      // Check correctness (case-insensitive)
+      const normalizedAnswer = textAnswer.trim().toLowerCase();
+      const correctAnswer = (question.correctAnswer || '').trim().toLowerCase();
+      const accepted = (question.acceptedAnswers || []).map(a => a.trim().toLowerCase());
+      isCorrect = normalizedAnswer === correctAnswer || accepted.includes(normalizedAnswer);
+    }
 
     return this._evaluateAndPersist(session, question, teamId, teamName, team ?? null, isCorrect, -1, textAnswer.trim());
+  }
+
+  /**
+   * Submit teacher direct verdict (Correct or Incorrect) for the currently selected team.
+   * Works for any question type (MCQ, True/False, Short Answer, Complete).
+   */
+  submitVerdict(isCorrect: boolean, selectedOptionIndex: number = -1, textAnswer: string = ''): EvaluationOutcome | null {
+    const session = this._session();
+    const question = this.currentQuestion();
+    const teamId = this._selectedTeamId();
+
+    if (!session || !question || !teamId || this._isAnswerSubmitted()) {
+      return null;
+    }
+
+    this.timerService.pause();
+
+    const team = this._teams().find(t => t.id === teamId);
+    const teamName = team ? team.name : 'Selected Team';
+
+    let optIdx = selectedOptionIndex;
+    if (optIdx < 0 && question.options && question.options.length > 0) {
+      optIdx = isCorrect ? question.correctOptionIndex : (question.correctOptionIndex === 0 ? 1 : 0);
+    }
+
+    return this._evaluateAndPersist(session, question, teamId, teamName, team ?? null, isCorrect, optIdx, textAnswer || undefined);
+  }
+
+  /**
+   * Override the outcome of the currently evaluated question.
+   * Allows the teacher to switch from wrong to right (or vice-versa),
+   * automatically correcting points, updating the database, and updating rewards.
+   */
+  overrideLastOutcome(newIsCorrect: boolean): EvaluationOutcome | null {
+    const session = this._session();
+    const question = this.currentQuestion();
+    const currentOutcome = this._lastOutcome();
+
+    if (!session || !question || !currentOutcome || currentOutcome.isCorrect === newIsCorrect) {
+      return null;
+    }
+
+    const team = this._teams().find(t => t.id === currentOutcome.teamId);
+    if (!team) return null;
+
+    // Calculate new points to award
+    let newPoints = 0;
+    const cardApplied = currentOutcome.powerCardApplied;
+
+    if (newIsCorrect) {
+      let pts = question.points;
+      if (cardApplied === 'double_points') {
+        pts *= 2;
+      }
+      newPoints = pts;
+    } else {
+      if (question.penaltyMode === 'deduct') {
+        newPoints = -question.points;
+      } else {
+        newPoints = 0;
+      }
+    }
+
+    const scoreDelta = newPoints - currentOutcome.pointsAwarded;
+
+    // 1. Update Team Score
+    const updatedTeam: Team = {
+      ...team,
+      totalScore: team.totalScore + scoreDelta,
+    };
+    this.dataSource.saveTeam(updatedTeam);
+    this._teams.update(list => list.map(t => t.id === team.id ? updatedTeam : t));
+
+    // 2. Update QuestionResult in DataSource and signal
+    const existingResults = this._results();
+    const targetResult = existingResults.find(
+      r => r.sessionId === session.id && r.questionId === question.id && r.teamId === team.id
+    );
+
+    let newSelectedOpt = currentOutcome.selectedOptionIndex;
+    if (newIsCorrect && newSelectedOpt < 0 && question.options && question.options.length > 0) {
+      newSelectedOpt = question.correctOptionIndex;
+    }
+
+    if (targetResult) {
+      const updatedResult: QuestionResult = {
+        ...targetResult,
+        isCorrect: newIsCorrect,
+        pointsAwarded: newPoints,
+        selectedOptionIndex: newSelectedOpt,
+      };
+      this.dataSource.saveResult(updatedResult);
+      this._results.update(list => list.map(r => r.id === targetResult.id ? updatedResult : r));
+    }
+
+    // 3. Handle Green Card Reward
+    let rewardCardEarned = currentOutcome.rewardCardEarned;
+    let rewardCardMessage = currentOutcome.rewardCardMessage;
+
+    if (newIsCorrect && question.isGreenCardReward && !rewardCardEarned) {
+      const rewardResult = this.greenCardService.awardRewardCard(session.id, team.id, question.id);
+      if (rewardResult.success) {
+        rewardCardEarned = rewardResult.card;
+        rewardCardMessage = rewardResult.message;
+      } else {
+        rewardCardMessage = rewardResult.message;
+      }
+      this.refreshSessionCards();
+    } else if (!newIsCorrect && rewardCardEarned) {
+      this.dataSource.deleteCard(rewardCardEarned.id);
+      rewardCardEarned = null;
+      rewardCardMessage = null;
+      this.refreshSessionCards();
+    }
+
+    // 4. Update last outcome
+    const updatedOutcome: EvaluationOutcome = {
+      ...currentOutcome,
+      isCorrect: newIsCorrect,
+      selectedOptionIndex: newSelectedOpt,
+      pointsAwarded: newPoints,
+      rewardCardEarned,
+      rewardCardMessage,
+    };
+
+    this._lastOutcome.set(updatedOutcome);
+    return updatedOutcome;
   }
 
   /**

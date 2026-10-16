@@ -91,6 +91,18 @@ export class TeamService {
     this.loadTeams(classId);
   }
 
+  setScore(teamId: string, classId: string, newScore: number): void {
+    const team = this._teams().find(t => t.id === teamId) || this.dataSource.getTeamsByClass(classId).find(t => t.id === teamId);
+    if (!team) return;
+
+    const updated: Team = {
+      ...team,
+      totalScore: newScore,
+    };
+    this.dataSource.saveTeam(updated);
+    this.loadTeams(classId);
+  }
+
   saveMembers(teamId: string, members: TeamMember[]): void {
     this.dataSource.saveMembers(teamId, members);
   }

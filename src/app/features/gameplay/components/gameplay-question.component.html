@@ -90,6 +90,32 @@
               </div>
             }
           </div>
+
+          <!-- Teacher Direct Verdict Action Bar for MCQ/TF -->
+          @if (!isAnswerSubmitted()) {
+            <div class="mt-3 sm:mt-4 p-3 rounded-2xl bg-white/80 border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="pi pi-check-circle text-indigo-500"></i>
+                <span>{{ i18n.t('gameplay.teacherVerdict') }}</span>
+              </span>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="submitVerdict(true)"
+                  class="px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+                  <i class="pi pi-check text-xs"></i>
+                  <span>{{ i18n.t('gameplay.submitAsRight') }}</span>
+                </button>
+                <button
+                  type="button"
+                  (click)="submitVerdict(false)"
+                  class="px-3 sm:px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+                  <i class="pi pi-times text-xs"></i>
+                  <span>{{ i18n.t('gameplay.submitAsWrong') }}</span>
+                </button>
+              </div>
+            </div>
+          }
         } @else {
           <!-- Text Answer Entry for Short Answer and Complete Questions -->
           <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-md">
@@ -101,12 +127,31 @@
                   (keyup.enter)="submitTextAnswer()"
                   [placeholder]="i18n.t('gameplay.typeAnswerPlaceholder')"
                   class="flex-1 w-full px-5 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white text-slate-900 text-base font-semibold outline-none transition-all" />
-                <button
-                  (click)="submitTextAnswer()"
-                  class="w-full sm:w-auto px-6 py-3.5 rounded-2xl gradient-bg text-white font-bold text-sm shadow-md shadow-indigo-500/20 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer shrink-0 flex items-center justify-center gap-2">
-                  <i class="pi pi-send text-xs"></i>
-                  <span>{{ i18n.t('gameplay.submitTextAnswer') }}</span>
-                </button>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    (click)="submitTextAnswer(true)"
+                    class="flex-1 sm:flex-initial px-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-500/20 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2">
+                    <i class="pi pi-check text-xs"></i>
+                    <span>{{ i18n.t('gameplay.submitAsRight') }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="submitTextAnswer()"
+                    class="px-4 py-3.5 rounded-2xl gradient-bg text-white font-bold text-sm shadow-md shadow-indigo-500/20 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    [title]="i18n.t('gameplay.autoCheck')">
+                    <i class="pi pi-send text-xs"></i>
+                    <span>{{ i18n.t('gameplay.submitTextAnswer') }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="submitTextAnswer(false)"
+                    class="px-4 py-3.5 rounded-2xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    [title]="i18n.t('gameplay.submitAsWrong')">
+                    <i class="pi pi-times text-xs"></i>
+                    <span>{{ i18n.t('gameplay.submitAsWrong') }}</span>
+                  </button>
+                </div>
               </div>
             } @else {
               <div class="space-y-3">
@@ -174,6 +219,27 @@
               </div>
             }
           </div>
+        </div>
+
+        <!-- Teacher Result Override Control -->
+        <div class="flex items-center gap-2 shrink-0 self-end sm:self-center mt-3 sm:mt-0">
+          @if (!outcome.isCorrect) {
+            <button
+              type="button"
+              (click)="overrideOutcome(true)"
+              class="px-4 sm:px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-500/25 hover:scale-105 transition-all cursor-pointer flex items-center gap-2">
+              <i class="pi pi-check-circle text-sm"></i>
+              <span>{{ i18n.t('gameplay.markAsRight') }}</span>
+            </button>
+          } @else {
+            <button
+              type="button"
+              (click)="overrideOutcome(false)"
+              class="px-4 sm:px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm shadow-md shadow-red-500/25 hover:scale-105 transition-all cursor-pointer flex items-center gap-2">
+              <i class="pi pi-times-circle text-sm"></i>
+              <span>{{ i18n.t('gameplay.markAsWrong') }}</span>
+            </button>
+          }
         </div>
       </div>
     }

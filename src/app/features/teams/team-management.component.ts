@@ -8,6 +8,7 @@ import { I18nService } from '../../core/services/i18n.service';
 import { TeamMember } from '../../core/models/team.model';
 import { generateId } from '../../core/utils';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-team-management',
@@ -144,8 +145,17 @@ export class TeamManagementComponent implements OnInit {
     this.editingTeam.set(null);
   }
 
+  customDeltaValue: number | null = null;
+  customExactScore: number | null = null;
+
   openAdjustScoreModal(detail: TeamWithDetails): void {
+    this.customDeltaValue = null;
+    this.customExactScore = null;
     this.adjustingTeam.set(detail);
+  }
+
+  closeAdjustScoreModal(): void {
+    this.adjustingTeam.set(null);
   }
 
   applyScoreDelta(delta: number): void {
@@ -154,6 +164,41 @@ export class TeamManagementComponent implements OnInit {
     this.teamService.updateScore(target.team.id, this.classId(), delta);
     const updated = this.teamService.getTeamsWithDetails(this.classId()).find(t => t.team.id === target.team.id);
     if (updated) this.adjustingTeam.set(updated);
+    Swal.fire({
+      icon: 'success',
+      title: (delta > 0 ? `+${delta}` : `${delta}`) + ` ${this.i18n.t('questions.points')}`,
+      text: this.i18n.t('teams.pointsAdjusted'),
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top',
+    });
+  }
+
+  applyCustomDelta(): void {
+    if (this.customDeltaValue === null || isNaN(this.customDeltaValue) || this.customDeltaValue === 0) return;
+    const delta = Number(this.customDeltaValue);
+    this.applyScoreDelta(delta);
+    this.customDeltaValue = null;
+  }
+
+  applyExactScore(): void {
+    const target = this.adjustingTeam();
+    if (!target || this.customExactScore === null || isNaN(this.customExactScore)) return;
+    const score = Number(this.customExactScore);
+    this.teamService.setScore(target.team.id, this.classId(), score);
+    const updated = this.teamService.getTeamsWithDetails(this.classId()).find(t => t.team.id === target.team.id);
+    if (updated) this.adjustingTeam.set(updated);
+    this.customExactScore = null;
+    Swal.fire({
+      icon: 'success',
+      title: `${score} ${this.i18n.t('questions.points')}`,
+      text: this.i18n.t('teams.pointsAdjusted'),
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top',
+    });
   }
 
   confirmDeleteTeam(teamId: string, teamName: string): void {

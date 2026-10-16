@@ -47,6 +47,14 @@
             title="Add 15 seconds to timer">
             {{ i18n.t('gameplay.add15s') }}
           </button>
+
+          <button
+            (click)="openAdjustPoints()"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer border border-slate-300 transition-colors shadow-2xs flex items-center gap-1.5"
+            [title]="i18n.t('gameplay.adjustPoints')">
+            <i class="pi pi-sliders-h text-indigo-600"></i>
+            <span class="hidden md:inline">{{ i18n.t('gameplay.adjustPoints') }}</span>
+          </button>
         </div>
       </div>
     </header>

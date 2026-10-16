@@ -1,4 +1,5 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, computed, inject, output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { I18nService } from '../../../core/services/i18n.service';
 import { GameplayService } from '../../../core/services/gameplay.service';
 import { GreenCardService } from '../../../core/services/green-card.service';
@@ -7,6 +8,7 @@ import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-gameplay-controls',
+  imports: [FormsModule],
   templateUrl: './gameplay-controls.component.html',
   styleUrl: './gameplay-controls.component.css'
 })
@@ -23,7 +25,66 @@ export class GameplayControlsComponent {
   readonly activeCard = this.gameplay.activeCard;
   readonly session = this.gameplay.session;
 
+  readonly adjustingTeam = computed(() => {
+    const tid = this.gameplay.adjustingTeamId();
+    if (!tid) return null;
+    return this.teams().find(t => t.id === tid) ?? null;
+  });
+
+  customDeltaValue: number | null = null;
+  customExactScore: number | null = null;
+
   onSkipQuestion = output<void>();
+
+  openAdjustScoreModal(teamId?: string): void {
+    this.customDeltaValue = null;
+    this.customExactScore = null;
+    this.gameplay.openAdjustPointsModal(teamId);
+  }
+
+  closeAdjustScoreModal(): void {
+    this.gameplay.closeAdjustPointsModal();
+  }
+
+  selectAdjustingTeam(teamId: string): void {
+    this.gameplay.openAdjustPointsModal(teamId);
+  }
+
+  applyDelta(teamId: string, delta: number): void {
+    this.gameplay.adjustTeamScore(teamId, delta);
+    Swal.fire({
+      icon: 'success',
+      title: (delta > 0 ? `+${delta}` : `${delta}`) + ` ${this.i18n.t('questions.points')}`,
+      text: this.i18n.t('gameplay.pointsAdjusted'),
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top',
+    });
+  }
+
+  applyCustomDelta(teamId: string): void {
+    if (this.customDeltaValue === null || isNaN(this.customDeltaValue) || this.customDeltaValue === 0) return;
+    const delta = Number(this.customDeltaValue);
+    this.applyDelta(teamId, delta);
+    this.customDeltaValue = null;
+  }
+
+  applyExactScore(teamId: string): void {
+    if (this.customExactScore === null || isNaN(this.customExactScore)) return;
+    const score = Number(this.customExactScore);
+    this.gameplay.setTeamScore(teamId, score);
+    this.customExactScore = null;
+    Swal.fire({
+      icon: 'success',
+      title: `${score} ${this.i18n.t('questions.points')}`,
+      text: this.i18n.t('gameplay.pointsAdjusted'),
+      timer: 1500,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top',
+    });
+  }
 
   selectTeam(teamId: string): void {
     this.gameplay.selectTeam(teamId);

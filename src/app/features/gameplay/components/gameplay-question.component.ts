@@ -100,7 +100,7 @@ export class GameplayQuestionComponent {
     this.gameplay.submitAnswer(optionIndex);
   }
 
-  submitTextAnswer(): void {
+  submitTextAnswer(teacherOverride?: boolean): void {
     if (this.isAnswerSubmitted()) return;
 
     if (!this.selectedTeamId()) {
@@ -117,9 +117,47 @@ export class GameplayQuestionComponent {
       return;
     }
 
-    if (!this.studentTextAnswer.trim()) return;
+    const answer = this.studentTextAnswer.trim() || (teacherOverride ? '✓ Teacher Accepted' : '');
+    if (!answer && teacherOverride === undefined) return;
 
-    this.gameplay.submitTextAnswer(this.studentTextAnswer);
+    this.gameplay.submitTextAnswer(answer, teacherOverride);
     this.studentTextAnswer = '';
+  }
+
+  submitVerdict(isCorrect: boolean): void {
+    if (this.isAnswerSubmitted()) return;
+
+    if (!this.selectedTeamId()) {
+      Swal.fire({
+        icon: 'info',
+        title: this.i18n.t('gameplay.step1Title'),
+        text: this.i18n.t('gameplay.selectTeamFirst'),
+        confirmButtonColor: '#4f46e5',
+        timer: 2500,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top',
+      });
+      return;
+    }
+
+    this.gameplay.submitVerdict(isCorrect, -1, this.studentTextAnswer.trim());
+    this.studentTextAnswer = '';
+  }
+
+  overrideOutcome(newIsCorrect: boolean): void {
+    const outcome = this.gameplay.overrideLastOutcome(newIsCorrect);
+    if (outcome) {
+      Swal.fire({
+        icon: newIsCorrect ? 'success' : 'warning',
+        title: this.i18n.t('gameplay.outcomeOverridden', {
+          status: newIsCorrect ? this.i18n.t('gameplay.correct') : this.i18n.t('gameplay.wrongBanner')
+        }),
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top',
+      });
+    }
   }
 }
