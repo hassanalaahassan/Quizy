@@ -3,6 +3,7 @@ import { DataSource } from './data-source';
 import { GameClass } from '../models/game-class.model';
 import { Team, TeamMember } from '../models/team.model';
 import { Question } from '../models/question.model';
+import { QuestionGroup, BankQuestion } from '../models/question-bank.model';
 import { Session, SessionQuestionState, QuestionResult } from '../models/session.model';
 import { PowerCard, CardEvent } from '../models/power-card.model';
 
@@ -24,6 +25,8 @@ const KEYS = {
   results: `${PREFIX}_results`,
   powerCards: `${PREFIX}_power_cards`,
   cardEvents: `${PREFIX}_card_events`,
+  groups: `${PREFIX}_groups`,
+  bankQuestions: `${PREFIX}_bank_questions`,
 } as const;
 
 // ── Generic helpers ─────────────────────────────────────────
@@ -220,5 +223,52 @@ export class LocalStorageDataSource extends DataSource {
 
   saveCardEvent(event: CardEvent): void {
     upsert(KEYS.cardEvents, event);
+  }
+
+  // ── Groups (Central Question Bank) ───────────────────────
+
+  getGroups(): QuestionGroup[] {
+    return loadAll<QuestionGroup>(KEYS.groups);
+  }
+
+  saveGroup(group: QuestionGroup): void {
+    upsert(KEYS.groups, group);
+  }
+
+  deleteGroup(id: string): void {
+    // Delete bank questions belonging to this group
+    const allBankQ = loadAll<BankQuestion>(KEYS.bankQuestions);
+    saveAll(KEYS.bankQuestions, allBankQ.filter(q => q.groupId !== id));
+    remove<QuestionGroup>(KEYS.groups, id);
+  }
+
+  // ── Bank Questions (Central Question Bank) ───────────────
+
+  getBankQuestions(groupId?: string): BankQuestion[] {
+    const list = loadAll<BankQuestion>(KEYS.bankQuestions);
+    const filtered = groupId ? list.filter(q => q.groupId === groupId) : list;
+    return filtered.map(q => ({
+      ...q,
+      category: q.category || 'General',
+      questionType: q.questionType || 'mcq',
+      isGreenCardReward: q.isGreenCardReward ?? false,
+    }));
+  }
+
+  saveBankQuestion(question: BankQuestion): void {
+    upsert(KEYS.bankQuestions, question);
+  }
+
+  saveBankQuestionsBatch(questions: BankQuestion[]): void {
+    const existing = loadAll<BankQuestion>(KEYS.bankQuestions);
+    const map = new Map<string, BankQuestion>(existing.map(q => [q.id, q]));
+    for (const q of questions) {
+      map.set(q.id, q);
+    }
+    saveAll(KEYS.bankQuestions, Array.from(map.values()));
+  }
+
+  deleteBankQuestion(id: string): void {
+    remove<BankQuestion>(KEYS.bankQuestions, id);
   }
 }

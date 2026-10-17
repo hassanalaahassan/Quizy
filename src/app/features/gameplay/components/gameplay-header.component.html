@@ -1,59 +1,59 @@
-    <header class="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-6 py-3">
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <header class="border-b border-[#e8e6e0] bg-white/92 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
         <!-- Left: Exit / Pause & Breadcrumb -->
-        <div class="flex items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <button
             (click)="onPauseAndExit.emit()"
-            class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 hover:text-slate-900 text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-all shadow-xs"
+            class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-[#e8e6e0] text-slate-700 hover:text-slate-900 text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer transition-all shadow-2xs min-w-0 shrink-0"
             [title]="i18n.t('gameplay.pauseAndExit')">
-            <i class="pi pi-pause text-amber-500"></i>
-            <span class="hidden sm:inline">{{ i18n.t('gameplay.pauseAndExit') }}</span>
+            <i class="pi pi-pause text-amber-500 shrink-0"></i>
+            <span class="hidden sm:inline truncate">{{ i18n.t('gameplay.pauseAndExit') }}</span>
           </button>
 
-          <div class="h-4 w-px bg-slate-300 hidden sm:block"></div>
+          <div class="h-4 w-px bg-[#e8e6e0] hidden sm:block"></div>
 
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-500 hidden md:inline font-semibold">{{ currentClass()?.name }}</span>
-            <span class="text-xs text-slate-400 hidden md:inline">/</span>
-            <span class="text-xs font-bold text-slate-800 truncate max-w-xs">{{ session()?.name }}</span>
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-xs text-slate-500 hidden md:inline font-semibold shrink-0">{{ currentClass()?.name }}</span>
+            <span class="text-xs text-slate-400 hidden md:inline shrink-0">/</span>
+            <span class="text-xs font-bold text-slate-800 truncate max-w-[120px] sm:max-w-xs">{{ session()?.name }}</span>
           </div>
         </div>
 
         <!-- Center: Question Progress Pill -->
-        <div class="flex items-center gap-2">
-          <div class="px-3 sm:px-3.5 py-1 rounded-full bg-slate-100 border border-slate-300 text-xs font-bold text-slate-800 flex items-center gap-1.5 sm:gap-2 shadow-2xs">
-            <span class="text-indigo-600 font-black tracking-wider">{{ i18n.t('gameplay.questionPill') }}</span>
-            <span class="text-cyan-700 font-black">{{ currentIndex() + 1 }}</span>
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="px-2.5 sm:px-3.5 py-1 rounded-full bg-[#effcf9] border border-[#c8f7ec] text-xs font-bold text-slate-800 flex items-center gap-1.5 sm:gap-2 shadow-2xs">
+            <span class="text-[#0b6c62] font-black tracking-wider text-[11px] sm:text-xs">{{ i18n.t('gameplay.questionPill') }}</span>
+            <span class="text-teal-700 font-black">{{ currentIndex() + 1 }}</span>
             <span class="text-slate-400">/</span>
             <span class="text-slate-500">{{ totalQuestionsCount() }}</span>
           </div>
         </div>
 
         <!-- Right: Timer Controls & Language Switcher -->
-        <div class="flex items-center gap-1.5 sm:gap-2.5">
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
           <app-language-switcher />
 
           <button
             (click)="toggleTimer()"
-            [class]="timerRunning() ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-xs' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'"
-            class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all">
-            <i [class]="timerRunning() ? 'pi pi-pause' : 'pi pi-play'"></i>
-            <span class="hidden sm:inline">{{ timerRunning() ? i18n.t('gameplay.pauseTimer') : i18n.t('gameplay.startTimer') }}</span>
+            [class]="timerRunning() ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-2xs' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-2xs'"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all min-w-0">
+            <i [class]="timerRunning() ? 'pi pi-pause' : 'pi pi-play'" class="shrink-0"></i>
+            <span class="hidden sm:inline truncate">{{ timerRunning() ? i18n.t('gameplay.pauseTimer') : i18n.t('gameplay.startTimer') }}</span>
           </button>
 
           <button
             (click)="addTime(15)"
-            class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer border border-slate-300 transition-colors shadow-2xs"
+            class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold cursor-pointer border border-[#e8e6e0] transition-colors shadow-2xs min-w-0 shrink-0"
             title="Add 15 seconds to timer">
             {{ i18n.t('gameplay.add15s') }}
           </button>
 
           <button
             (click)="openAdjustPoints()"
-            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer border border-slate-300 transition-colors shadow-2xs flex items-center gap-1.5"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold cursor-pointer border border-[#e8e6e0] transition-colors shadow-2xs flex items-center gap-1.5 min-w-0 shrink-0"
             [title]="i18n.t('gameplay.adjustPoints')">
-            <i class="pi pi-sliders-h text-indigo-600"></i>
-            <span class="hidden md:inline">{{ i18n.t('gameplay.adjustPoints') }}</span>
+            <i class="pi pi-sliders-h text-[#0b6c62]"></i>
+            <span class="hidden md:inline truncate">{{ i18n.t('gameplay.adjustPoints') }}</span>
           </button>
         </div>
       </div>

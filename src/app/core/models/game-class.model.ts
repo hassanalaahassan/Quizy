@@ -5,6 +5,7 @@
 export interface GameClass {
   id: string;
   name: string;
+  groupId?: string;
   createdAt: number;
   updatedAt: number;
 }

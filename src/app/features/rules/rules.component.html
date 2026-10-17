@@ -1,15 +1,10 @@
-    <div class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+    <div class="min-h-screen text-[#1a1a1a] flex flex-col" style="background:#fafaf8">
       <!-- Header -->
-      <header class="border-b border-slate-200 bg-white/85 backdrop-blur-md sticky top-0 z-20 px-6 py-4">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-          <button (click)="goBack()" class="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-xs flex items-center gap-2 text-xs font-bold">
-            <i class="pi pi-arrow-left rtl-flip"></i>
-            <span>{{ i18n.t('nav.back') }}</span>
-          </button>
-
-          <app-language-switcher />
-        </div>
-      </header>
+      <app-navbar
+        [showBack]="true"
+        backRoute="/"
+        [pageTitle]="i18n.t('nav.rules')"
+        [pageSubtitle]="i18n.t('brand.title')" />
 
       <!-- Content -->
       <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-10">

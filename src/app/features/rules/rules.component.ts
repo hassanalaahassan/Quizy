@@ -1,18 +1,18 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { I18nService } from '../../core/services/i18n.service';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-rules',
-  imports: [LanguageSwitcherComponent],
+  imports: [NavbarComponent],
   templateUrl: './rules.component.html',
 })
 export class RulesComponent {
   readonly i18n = inject(I18nService);
   private router = inject(Router);
 
-  readonly localizedRules = computed(() => {
+  readonly localizedRules = computed(() => { 
     const isAr = this.i18n.lang() === 'ar';
     return isAr
       ? [

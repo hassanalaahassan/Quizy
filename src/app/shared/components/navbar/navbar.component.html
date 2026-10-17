@@ -1,0 +1,89 @@
+<header class="app-navbar" role="navigation">
+  <div class="navbar-container">
+    <!-- Left Section: Brand / Back + Title -->
+    <div class="navbar-left">
+      @if (showBack()) {
+        <button
+          (click)="goBack()"
+          class="navbar-back-btn"
+          [title]="i18n.t('nav.back')">
+          <i class="pi pi-arrow-left rtl-flip"></i>
+        </button>
+      }
+
+      @if (showBrand() && !showBack()) {
+        <div class="navbar-brand" (click)="goHome()">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-svg">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" opacity="0.9"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">Quiziyyy</span>
+            <span class="brand-badge">{{ i18n.t('brand.arenaBadge') }}</span>
+          </div>
+        </div>
+      }
+
+      @if (pageTitle()) {
+        <div class="navbar-page-info">
+          <div class="page-title-row">
+            <h1 class="page-title">{{ pageTitle() }}</h1>
+            @if (pageBadge()) {
+              <span class="page-badge">{{ pageBadge() }}</span>
+            }
+          </div>
+          @if (pageSubtitle()) {
+            <span class="page-subtitle">{{ pageSubtitle() }}</span>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Right Section: Actions + Language Switcher + Mobile Menu Toggle -->
+    <div class="navbar-right">
+      <!-- Desktop actions -->
+      <div class="navbar-actions-desktop">
+        @for (action of actions(); track action.label) {
+          <button
+            (click)="executeAction(action)"
+            [class]="'nav-action nav-action--' + (action.style || 'ghost')"
+            [class.hide-mobile]="action.hideOnMobile !== false">
+            <i [class]="action.icon"></i>
+            <span class="action-label">{{ action.label }}</span>
+            @if (action.badge) {
+              <span class="action-badge">{{ action.badge }}</span>
+            }
+          </button>
+        }
+      </div>
+
+      <app-language-switcher />
+
+      <!-- Mobile menu toggle -->
+      @if (actions().length > 0) {
+        <button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
+          <i [class]="mobileMenuOpen() ? 'pi pi-times' : 'pi pi-bars'"></i>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Mobile Dropdown Menu -->
+  @if (mobileMenuOpen()) {
+    <div class="mobile-menu-overlay" (click)="mobileMenuOpen.set(false)"></div>
+    <nav class="mobile-menu">
+      @for (action of actions(); track action.label) {
+        <button
+          (click)="executeAction(action)"
+          [class]="'mobile-menu-item mobile-menu-item--' + (action.style || 'ghost')">
+          <i [class]="action.icon"></i>
+          <span>{{ action.label }}</span>
+          @if (action.badge) {
+            <span class="mobile-badge">{{ action.badge }}</span>
+          }
+        </button>
+      }
+    </nav>
+  }
+</header>

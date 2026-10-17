@@ -1,13 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { I18nService } from '../../core/services/i18n.service';
 import { SeedService } from '../../core/services/seed.service';
 import { ClassService } from '../../core/services/class.service';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import { NavbarComponent, NavAction } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-welcome',
-  imports: [LanguageSwitcherComponent],
+  imports: [NavbarComponent],
   templateUrl: './welcome.component.html',
 })
 export class WelcomeComponent {
@@ -15,6 +15,27 @@ export class WelcomeComponent {
   private router = inject(Router);
   private seedService = inject(SeedService);
   private classService = inject(ClassService);
+
+  readonly navActions = computed<NavAction[]>(() => [
+    {
+      label: this.i18n.t('bank.navTitle'),
+      icon: 'pi pi-database',
+      route: '/question-bank',
+      style: 'secondary',
+    },
+    {
+      label: this.i18n.t('nav.howToPlay'),
+      icon: 'pi pi-info-circle',
+      route: '/instructions',
+      style: 'ghost',
+    },
+    {
+      label: this.i18n.t('nav.rules'),
+      icon: 'pi pi-book',
+      route: '/rules',
+      style: 'ghost',
+    },
+  ]);
 
   enter(): void {
     this.router.navigate(['/classes']);

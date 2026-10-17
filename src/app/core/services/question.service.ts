@@ -1,10 +1,13 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { DataSource } from '../data/data-source';
 import { PenaltyMode, Question, QuestionOption, QuestionType } from '../models/question.model';
+import { BankQuestion } from '../models/question-bank.model';
 import { generateId, now } from '../utils';
 
 export interface CreateQuestionDto {
   classId: string;
+  category?: string;
+  sourceBankQuestionId?: string;
   questionType?: QuestionType;
   text: string;
   options: QuestionOption[];
@@ -90,6 +93,8 @@ export class QuestionService {
       timerSeconds: dto.timerSeconds,
       penaltyMode: dto.penaltyMode,
       isGreenCardReward: dto.isGreenCardReward ?? false,
+      category: dto.category?.trim() || 'General',
+      sourceBankQuestionId: dto.sourceBankQuestionId,
       createdAt: now(),
     };
 
@@ -110,5 +115,52 @@ export class QuestionService {
   deleteQuestion(questionId: string, classId: string): void {
     this.dataSource.deleteQuestion(questionId);
     this.loadQuestions(classId);
+  }
+
+  /**
+   * Import questions from Central Bank into a classroom as independent copies.
+   * Prevents accidental duplicates by checking sourceBankQuestionId and question text.
+   * Returns count of newly imported questions.
+   */
+  importQuestionsFromBank(classId: string, bankQuestions: BankQuestion[]): number {
+    const existing = this.dataSource.getQuestionsByClass(classId);
+    const existingBankIds = new Set(existing.map(q => q.sourceBankQuestionId).filter(Boolean));
+    const existingTexts = new Set(existing.map(q => q.text.trim().toLowerCase()));
+
+    let importedCount = 0;
+    const timestamp = now();
+
+    for (const bq of bankQuestions) {
+      // Guard against duplicate import in this classroom
+      if (existingBankIds.has(bq.id) || existingTexts.has(bq.text.trim().toLowerCase())) {
+        continue;
+      }
+
+      const copy: Question = {
+        id: generateId(), // independent ID
+        classId,
+        questionType: bq.questionType,
+        text: bq.text,
+        options: bq.options ? bq.options.map(o => ({ text: o.text })) : [],
+        correctOptionIndex: bq.correctOptionIndex,
+        correctAnswer: bq.correctAnswer,
+        acceptedAnswers: bq.acceptedAnswers ? [...bq.acceptedAnswers] : undefined,
+        points: bq.points,
+        timerSeconds: bq.timerSeconds,
+        penaltyMode: bq.penaltyMode,
+        isGreenCardReward: bq.isGreenCardReward,
+        category: bq.category || 'General',
+        sourceBankQuestionId: bq.id,
+        createdAt: timestamp,
+      };
+
+      this.dataSource.saveQuestion(copy);
+      existingBankIds.add(bq.id);
+      existingTexts.add(bq.text.trim().toLowerCase());
+      importedCount++;
+    }
+
+    this.loadQuestions(classId);
+    return importedCount;
   }
 }

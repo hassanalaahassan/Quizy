@@ -116,3 +116,59 @@ If an answer was evaluated by the system as incorrect, but you deem it correct:
    - منح البطاقة الخضراء للفريق إذا كان السؤال سؤال مكافأة.
    - تحديث السجل الدائم في قاعدة البيانات وتحديث ترتيب الفرق في لوحة الصدارة فوراً.
 4. إذا تم احتساب الإجابة صحيحة بالخطأ، يمكن الضغط على **"تغيير إلى خاطئة"** لإلغاء النقاط وتطبيق الخصم.
+
+---
+
+### 4. Central Question Bank & Excel Template (English)
+
+#### A. Central Question Bank by Groups
+The Central Question Bank (`/question-bank`) allows teachers to organize questions centrally by grade groups (e.g. Group 1, Group 2, Group 3) rather than per classroom.
+
+#### B. Excel Spreadsheet Template (`Quiziyyy_Questions_Template.xlsx`)
+Teachers can download the official template directly from the website or from the `docs/` or `public/` directory.
+
+The Excel file contains two sheets:
+1. **`الأسئلة (Questions)`**:
+   | Column | Status | Description | Examples |
+   | :--- | :--- | :--- | :--- |
+   | `Question` | **Required** | The question text displayed on screen | What is the capital of France? |
+   | `Answer` | **Required** | The correct answer | Paris / عطارد / True |
+   | `Category` | Optional | Subject or topic area | Science / History / جغرافيا |
+   | `Options` | Optional | Options for Multiple Choice separated by semicolon `;` | Mars; Jupiter; Saturn; Earth |
+   | `Points` | Optional | Score points awarded (Default: 20) | 10 / 20 / 30 |
+   | `Timer (Seconds)` | Optional | Countdown timer duration (Default: 30) | 20 / 30 / 45 / 60 |
+
+2. **`تعليمات الاستخدام (Guide)`**:
+   Detailed guidelines and rules explaining each column format in Arabic and English.
+
+#### C. Importing Questions into Classrooms
+1. In any classroom, open the **Questions** page.
+2. Click **"Import from Question Bank"**.
+3. Questions belonging to that classroom's group appear automatically.
+4. Select one or more questions and click **"Import Selected"**. Questions are copied independently without modifying the central bank.
+
+---
+
+### 5. بنك الأسئلة المركزي ونموذج الإكسيل المعتمد (بالعربية)
+
+#### أ. بنك الأسئلة المركزي المقسم لمجموعات
+يتيح بنك الأسئلة المركزي (`/question-bank`) للمعلمين إدارة الأسئلة وتصنيفها مركزياً حسب المراحل أو المجموعات (مثل: المجموعة 1، المجموعة 2، إلخ) واستيرادها لأي فصل دون الحاجة لإعادة كتابتها.
+
+#### ب. نموذج الإكسيل الرسمي (`Quiziyyy_Questions_Template.xlsx`)
+تم إعداد نموذج إكسيل رسمي يمكن لأي معلم تحميله وتعبئته بالأسئلة مباشرة. يحتوي الملف على ورقتي عمل:
+1. **ورقة `الأسئلة (Questions)`**:
+   - **السؤال (Question - مطلوب):** نص السؤال الذي سيظهر أمام الطلاب على الشاشة.
+   - **الإجابة (Answer - مطلوب):** الإجابة الصحيحة (كلمة، جملة، أو خيار).
+   - **التصنيف (Category - اختياري):** مادة السؤال (مثل: علوم، تاريخ، لغة عربية، تكنولوجيا).
+   - **الخيارات (Options - اختياري):** خاص بأسئلة الاختيار من متعدد؛ تفصل الخيارات بفاصلة منقوطة `;` مثل: `الزهرة; عطارد; المريخ; الأرض`.
+   - **النقاط (Points - اختياري):** نقاط السؤال (الافتراضي: 20 نقطة).
+   - **الوقت (Timer (Seconds) - اختياري):** مدة العداد التنازلي بالثواني (الافتراضي: 30 ثانية).
+
+2. **ورقة `تعليمات الاستخدام (Guide)`**:
+   دليل إرشادي تفصيلي يشرح لكل معلم كيفية ملء كل عمود بدقة لتجنب أي أخطاء أثناء الرفع.
+
+#### ج. استيراد الأسئلة إلى أي فصل صفي
+1. من داخل أي فصل، ادخل إلى صفحة **"الأسئلة"**.
+2. اضغط على زر **"استيراد من بنك الأسئلة"**.
+3. تظهر أسئلة المجموعة المخصصة لهذا الفصل تلقائياً مع تمييز الأسئلة المضافة مسبقاً لمنع التكرار.
+4. حدد الأسئلة المطلوبة واضغط **"استيراد المحدد"**. يتم إنشاء نسخ مستقلة تماماً داخل الفصل.

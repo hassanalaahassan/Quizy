@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/rules/rules.component').then(m => m.RulesComponent),
   },
   {
+    path: 'question-bank',
+    loadComponent: () => import('./features/question-bank/question-bank-central.component').then(m => m.QuestionBankCentralComponent),
+  },
+  {
     path: 'classes',
     loadComponent: () => import('./features/classes/class-list.component').then(m => m.ClassListComponent),
   },

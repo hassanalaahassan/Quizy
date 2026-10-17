@@ -1,6 +1,7 @@
 import { GameClass } from '../models/game-class.model';
 import { Team, TeamMember } from '../models/team.model';
 import { Question } from '../models/question.model';
+import { QuestionGroup, BankQuestion } from '../models/question-bank.model';
 import { Session, SessionQuestionState, QuestionResult } from '../models/session.model';
 import { PowerCard, CardEvent } from '../models/power-card.model';
 
@@ -53,4 +54,15 @@ export abstract class DataSource {
   // ── Card Events ──────────────────────────────────────────
   abstract getCardEventsBySession(sessionId: string): CardEvent[];
   abstract saveCardEvent(event: CardEvent): void;
+
+  // ── Groups (Central Question Bank) ───────────────────────
+  abstract getGroups(): QuestionGroup[];
+  abstract saveGroup(group: QuestionGroup): void;
+  abstract deleteGroup(id: string): void;
+
+  // ── Bank Questions (Central Question Bank) ───────────────
+  abstract getBankQuestions(groupId?: string): BankQuestion[];
+  abstract saveBankQuestion(question: BankQuestion): void;
+  abstract saveBankQuestionsBatch(questions: BankQuestion[]): void;
+  abstract deleteBankQuestion(id: string): void;
 }

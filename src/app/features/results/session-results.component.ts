@@ -5,11 +5,11 @@ import { ClassService } from '../../core/services/class.service';
 import { QuestionService } from '../../core/services/question.service';
 import { TeamService } from '../../core/services/team.service';
 import { I18nService } from '../../core/services/i18n.service';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import { NavbarComponent, NavAction } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-session-results',
-  imports: [LanguageSwitcherComponent],
+  imports: [NavbarComponent],
   templateUrl: './session-results.component.html',
 })
 export class SessionResultsComponent implements OnInit {
@@ -22,6 +22,22 @@ export class SessionResultsComponent implements OnInit {
   private classService = inject(ClassService);
   private teamService = inject(TeamService);
   private questionService = inject(QuestionService);
+
+  readonly navActions = computed<NavAction[]>(() => [
+    {
+      label: this.i18n.t('results.returnToDashboard'),
+      icon: 'pi pi-arrow-left',
+      callback: () => this.goToDashboard(),
+      style: 'secondary',
+    },
+    {
+      label: this.i18n.t('dashboard.newSession'),
+      icon: 'pi pi-plus',
+      callback: () => this.goToNewSession(),
+      style: 'primary',
+      hideOnMobile: false,
+    },
+  ]);
 
   readonly currentClass = computed(() => {
     return this.classService.classes().find(c => c.id === this.classId()) ?? null;

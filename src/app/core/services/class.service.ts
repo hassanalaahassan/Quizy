@@ -43,7 +43,7 @@ export class ClassService {
     this._selectedClassId.set(id);
   }
 
-  createClass(name: string): GameClass {
+  createClass(name: string, groupId?: string): GameClass {
     const trimmed = name.trim();
     if (!trimmed) {
       throw new Error('Class name is required');
@@ -53,6 +53,7 @@ export class ClassService {
     const newClass: GameClass = {
       id: generateId(),
       name: trimmed,
+      groupId: groupId || undefined,
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -62,7 +63,7 @@ export class ClassService {
     return newClass;
   }
 
-  updateClass(id: string, name: string): void {
+  updateClass(id: string, name: string, groupId?: string): void {
     const trimmed = name.trim();
     if (!trimmed) return;
 
@@ -72,6 +73,7 @@ export class ClassService {
     const updated: GameClass = {
       ...existing,
       name: trimmed,
+      groupId: groupId !== undefined ? groupId : existing.groupId,
       updatedAt: now(),
     };
 

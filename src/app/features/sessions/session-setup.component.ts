@@ -7,11 +7,11 @@ import { SessionService } from '../../core/services/session.service';
 import { TeamService } from '../../core/services/team.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { formatTimer } from '../../core/utils';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import { NavbarComponent, NavAction } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-session-setup',
-  imports: [FormsModule, LanguageSwitcherComponent],
+  imports: [FormsModule, NavbarComponent],
   templateUrl: './session-setup.component.html',
 })
 export class SessionSetupComponent implements OnInit {
@@ -23,6 +23,16 @@ export class SessionSetupComponent implements OnInit {
   private questionService = inject(QuestionService);
   private sessionService = inject(SessionService);
   private teamService = inject(TeamService);
+
+  readonly navActions = computed<NavAction[]>(() => [
+    {
+      label: this.i18n.t('session.startSession'),
+      icon: 'pi pi-play',
+      callback: () => this.saveAndPlay(),
+      style: 'primary',
+      hideOnMobile: false,
+    },
+  ]);
 
   readonly currentClass = computed(() => {
     return this.classService.classes().find(c => c.id === this.classId()) ?? null;

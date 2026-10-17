@@ -1,0 +1,815 @@
+<div class="min-h-screen text-[#1a1a1a] flex flex-col" style="background:#fafaf8">
+  <!-- Top Navigation -->
+  <app-navbar
+    [showBack]="true"
+    backRoute="/classes"
+    [pageTitle]="i18n.t('bank.centralTitle')"
+    [pageBadge]="filteredQuestions().length + ' ' + i18n.t('classes.questions')"
+    [pageSubtitle]="i18n.t('bank.centralSubtitle')"
+    [actions]="navActions()" />
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6">
+
+    <!-- Group Selector Tabs -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-2 shadow-xs">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none flex-1">
+          @for (grp of groups(); track grp.id) {
+            <div
+              (click)="selectGroup(grp.id)"
+              [class]="selectedGroupId() === grp.id ? 'bg-indigo-600 text-white shadow-sm font-bold' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium border border-slate-200'"
+              class="px-3.5 py-2 rounded-xl text-xs sm:text-sm cursor-pointer transition-all flex items-center gap-2 shrink-0 group">
+              <i class="pi pi-folder text-xs" [class.text-white]="selectedGroupId() === grp.id" [class.text-indigo-500]="selectedGroupId() !== grp.id"></i>
+              <span>{{ grp.name }}</span>
+
+              <!-- Edit Group button -->
+              <button
+                type="button"
+                (click)="openEditGroupModal(grp, $event)"
+                class="opacity-60 hover:opacity-100 p-1 rounded hover:bg-black/10 transition-opacity"
+                [title]="i18n.t('common.edit')">
+                <i class="pi pi-pencil text-[10px]"></i>
+              </button>
+
+              @if (groups().length > 1) {
+                <button
+                  type="button"
+                  (click)="confirmDeleteGroup(grp, $event)"
+                  class="opacity-60 hover:opacity-100 p-1 rounded hover:bg-red-500/20 text-red-300 hover:text-red-600 transition-opacity"
+                  [title]="i18n.t('common.delete')">
+                  <i class="pi pi-trash text-[10px]"></i>
+                </button>
+              }
+            </div>
+          }
+
+          <!-- New Group Button -->
+          <button
+            (click)="openCreateGroupModal()"
+            class="px-3 py-2 rounded-xl border border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50 text-slate-600 hover:text-indigo-600 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <i class="pi pi-plus text-xs"></i>
+            <span>{{ i18n.t('bank.addGroup') }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search, Filters, and Bulk Actions Toolbar -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+        <!-- Search Input -->
+        <div class="relative flex-1 max-w-md">
+          <i class="pi pi-search absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearchChange()"
+            [placeholder]="i18n.t('bank.searchPlaceholder')"
+            class="w-full pl-9 pr-4 rtl:pl-4 rtl:pr-9 py-2.5 rounded-xl bg-white border border-slate-200 focus:border-indigo-500 text-slate-900 text-xs sm:text-sm outline-none font-medium shadow-xs" />
+        </div>
+
+        <!-- Question Type Filter -->
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1">
+          <button
+            (click)="onTypeSelect(null)"
+            [class]="!selectedType() ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0">
+            {{ i18n.t('bank.allTypes') }}
+          </button>
+          <button
+            (click)="onTypeSelect('mcq')"
+            [class]="selectedType() === 'mcq' ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0">
+            {{ i18n.t('questions.typeMCQ') }}
+          </button>
+          <button
+            (click)="onTypeSelect('true_false')"
+            [class]="selectedType() === 'true_false' ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0">
+            {{ i18n.t('questions.typeTrueFalse') }}
+          </button>
+          <button
+            (click)="onTypeSelect('short_answer')"
+            [class]="selectedType() === 'short_answer' ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0">
+            {{ i18n.t('questions.typeShortAnswer') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Categories Pills -->
+      @if (categories().length > 0) {
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1 flex-wrap">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1">{{ i18n.t('bank.categoryLabel') }}:</span>
+          <button
+            (click)="onCategorySelect(null)"
+            [class]="!selectedCategory() ? 'bg-indigo-50 text-indigo-700 border-indigo-200 font-bold' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 font-medium'"
+            class="px-2.5 py-1 rounded-lg border text-xs cursor-pointer transition-all">
+            {{ i18n.t('bank.allCategories') }}
+          </button>
+          @for (cat of categories(); track cat) {
+            <button
+              (click)="onCategorySelect(cat)"
+              [class]="selectedCategory() === cat ? 'bg-indigo-600 text-white border-indigo-600 font-bold' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 font-medium'"
+              class="px-2.5 py-1 rounded-lg border text-xs cursor-pointer transition-all">
+              {{ cat }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Bulk Selection Action Bar -->
+    @if (selectedQuestionIds().size > 0) {
+      <div class="bg-indigo-50 border border-indigo-200 p-3 sm:p-4 rounded-2xl flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            [checked]="isAllSelected()"
+            (change)="toggleSelectAll()"
+            class="w-4 h-4 rounded text-indigo-600 cursor-pointer" />
+          <span class="text-xs sm:text-sm font-bold text-indigo-900">
+            {{ selectedQuestionIds().size }} {{ i18n.t('bank.selectedCount') }}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            (click)="openMoveModal()"
+            class="px-3 py-1.5 rounded-xl bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <i class="pi pi-folder text-xs"></i>
+            <span>{{ i18n.t('bank.moveGroupBtn') }}</span>
+          </button>
+
+          <button
+            (click)="confirmBulkDelete()"
+            class="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <i class="pi pi-trash text-xs"></i>
+            <span>{{ i18n.t('common.delete') }} ({{ selectedQuestionIds().size }})</span>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Questions Grid -->
+    @if (filteredQuestions().length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        @for (q of filteredQuestions(); track q.id; let idx = $index) {
+          <div
+            [class]="isQuestionSelected(q.id) ? 'border-indigo-400 bg-indigo-50/20' : 'border-slate-200 bg-white'"
+            class="p-5 sm:p-6 rounded-2xl border transition-all duration-200 shadow-xs hover:border-slate-300 flex flex-col justify-between group">
+            <div>
+              <!-- Top Row: Checkbox, Index, Category & Badges -->
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    [checked]="isQuestionSelected(q.id)"
+                    (change)="toggleSelectQuestion(q.id)"
+                    class="w-4 h-4 rounded text-indigo-600 cursor-pointer" />
+                  <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-black">
+                    #{{ idx + 1 }}
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                    {{ q.category || 'General' }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <!-- Type Badge -->
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                    {{ q.questionType }}
+                  </span>
+                  <!-- Points -->
+                  <span class="px-2 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <i class="pi pi-star-fill text-[8px] text-amber-500"></i>
+                    {{ q.points }}p
+                  </span>
+                  <!-- Timer -->
+                  <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
+                    <i class="pi pi-clock text-[8px]"></i>
+                    {{ formatTime(q.timerSeconds) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Question Text -->
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 leading-snug">
+                {{ q.text }}
+              </h3>
+
+              <!-- Answers Preview -->
+              @if (q.options && q.options.length > 0) {
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                  @for (opt of q.options; track $index; let optIdx = $index) {
+                    <div
+                      class="px-3 py-2 rounded-xl text-xs font-medium border flex items-center justify-between"
+                      [class]="optIdx === q.correctOptionIndex ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-700'">
+                      <div class="flex items-center gap-2">
+                        <span
+                          class="w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center"
+                          [class]="optIdx === q.correctOptionIndex ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'">
+                          {{ ['A', 'B', 'C', 'D', 'E', 'F'][optIdx] }}
+                        </span>
+                        <span>{{ opt.text }}</span>
+                      </div>
+                      @if (optIdx === q.correctOptionIndex) {
+                        <i class="pi pi-check text-emerald-600 text-[10px]"></i>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else if (q.correctAnswer) {
+                <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-900 mb-4">
+                  <span class="text-[10px] uppercase font-bold text-emerald-700 block mb-0.5">{{ i18n.t('questions.correctAnswer') }}</span>
+                  <span class="font-bold text-sm">{{ q.correctAnswer }}</span>
+                  @if (q.acceptedAnswers && q.acceptedAnswers.length > 1) {
+                    <span class="text-[10px] text-emerald-700 block mt-0.5">
+                      Alternatives: {{ q.acceptedAnswers.join(', ') }}
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Card Bottom Bar: Edit / Delete Actions -->
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[11px] text-slate-400">
+                {{ q.penaltyMode === 'deduct' ? i18n.t('questions.penaltyDeduct', { points: q.points }) : i18n.t('questions.penaltyNone') }}
+              </span>
+
+              <div class="flex items-center gap-2">
+                <button
+                  (click)="openEditQuestionModal(q)"
+                  class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 cursor-pointer">
+                  <i class="pi pi-pencil text-[10px]"></i>
+                  <span>{{ i18n.t('common.edit') }}</span>
+                </button>
+                <button
+                  (click)="confirmDeleteQuestion(q)"
+                  class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                  [title]="i18n.t('common.delete')">
+                  <i class="pi pi-trash text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="bg-white rounded-3xl border border-dashed border-slate-300 p-8 sm:p-12 text-center max-w-xl mx-auto my-6">
+        <div class="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center mx-auto mb-4 text-2xl">
+          <i class="pi pi-inbox"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 mb-1">
+          {{ i18n.t('bank.emptyGroupTitle') }}
+        </h3>
+        <p class="text-slate-500 text-xs sm:text-sm mb-6 max-w-md mx-auto">
+          {{ i18n.t('bank.emptyGroupDesc') }}
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            (click)="openExcelModal()"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
+            <i class="pi pi-file-excel"></i>
+            <span>{{ i18n.t('bank.uploadExcelBtn') }}</span>
+          </button>
+
+          <button
+            (click)="openCreateQuestionModal()"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl gradient-bg text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
+            <i class="pi pi-plus"></i>
+            <span>{{ i18n.t('bank.addQuestionBtn') }}</span>
+          </button>
+        </div>
+      </div>
+    }
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL 1: EXCEL IMPORT & LIVE PREVIEW MODAL                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  @if (showExcelModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div class="bg-white max-w-3xl w-full max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <i class="pi pi-file-excel text-base"></i>
+            </div>
+            <div>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900">
+                {{ i18n.t('bank.excelModalTitle') }}
+              </h3>
+              <p class="text-xs text-slate-500">
+                {{ i18n.t('bank.excelModalSubtitle') }}
+              </p>
+            </div>
+          </div>
+          <button (click)="closeExcelModal()" class="text-slate-400 hover:text-slate-700 p-2 rounded-xl cursor-pointer">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto flex-1 space-y-5">
+          <!-- Official Template Recommendation Banner -->
+          <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+                <i class="pi pi-download text-xs"></i>
+              </div>
+              <div>
+                <h4 class="text-xs sm:text-sm font-bold text-emerald-950">
+                  {{ i18n.lang() === 'ar' ? 'نموذج الإكسيل الرسمي المعتمد' : 'Official Excel Spreadsheet Template' }}
+                </h4>
+                <p class="text-[11px] sm:text-xs text-emerald-800 mt-0.5">
+                  {{ i18n.lang() === 'ar' ? 'حمل النموذج الجاهز واملأ أسئلتك به لضمان مطابقة الأعمدة واستيرادها بنجاح 100%.' : 'Download this pre-formatted template to fill in your questions and ensure 100% error-free import.' }}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              (click)="downloadSampleTemplate()"
+              class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer shrink-0">
+              <i class="pi pi-file-excel"></i>
+              <span>{{ i18n.lang() === 'ar' ? 'تحميل النموذج (.xlsx)' : 'Download Template (.xlsx)' }}</span>
+            </button>
+          </div>
+
+          <!-- Target Group Selection & Default Category -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                {{ i18n.t('bank.targetGroupLabel') }}
+              </label>
+              <select
+                [(ngModel)]="excelTargetGroupId"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-bold outline-none">
+                @for (grp of groups(); track grp.id) {
+                  <option [value]="grp.id">{{ grp.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                {{ i18n.t('bank.fallbackCategoryLabel') }}
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="excelDefaultCategory"
+                [placeholder]="i18n.t('bank.fallbackCategoryPlaceholder')"
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-semibold outline-none" />
+            </div>
+          </div>
+
+          <!-- File Upload Zone -->
+          <div class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 rounded-2xl p-6 text-center transition-all cursor-pointer relative">
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              (change)="onExcelFileSelected($event)"
+              class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+            <i class="pi pi-cloud-upload text-3xl text-emerald-600 mb-2 block"></i>
+            <span class="text-sm font-bold text-slate-800 block">
+              {{ i18n.t('bank.dragDropExcel') }}
+            </span>
+            <span class="text-xs text-slate-500 block mt-1">
+              {{ i18n.t('bank.excelFormatsAllowed') }} (.xlsx, .xls)
+            </span>
+            <button
+              type="button"
+              (click)="downloadSampleTemplate()"
+              class="mt-3 text-xs text-emerald-700 hover:text-emerald-900 font-bold underline inline-flex items-center gap-1 cursor-pointer">
+              <i class="pi pi-download text-[10px]"></i>
+              {{ i18n.t('bank.downloadTemplateTooltip') }}
+            </button>
+          </div>
+
+          <!-- Error Message Banner -->
+          @if (excelError()) {
+            <div class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+              <i class="pi pi-exclamation-circle text-base shrink-0"></i>
+              <span>{{ excelError() }}</span>
+            </div>
+          }
+
+          <!-- Success Summary Banner -->
+          @if (excelSuccessSummary()) {
+            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2">
+              <i class="pi pi-check-circle text-emerald-600 text-lg shrink-0"></i>
+              <span>{{ excelSuccessSummary() }}</span>
+            </div>
+          }
+
+          <!-- Live Preview of Parsed Rows -->
+          @if (excelResult(); as res) {
+            <div class="space-y-4">
+              <!-- Summary Statistics -->
+              <div class="flex items-center justify-between gap-2 flex-wrap p-3 rounded-xl bg-slate-100 border border-slate-200 text-xs">
+                <div class="flex items-center gap-3">
+                  <span class="font-bold text-slate-800">{{ res.fileName }}</span>
+                  <span class="text-slate-500">Total: <b>{{ res.totalRows }}</b></span>
+                  <span class="text-emerald-700 font-bold">Valid: <b>{{ res.validRows.length }}</b></span>
+                  @if (res.invalidRows.length > 0) {
+                    <span class="text-red-600 font-bold">Errors: <b>{{ res.invalidRows.length }}</b></span>
+                  }
+                </div>
+
+                <!-- Duplicate toggle -->
+                <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-700">
+                  <input type="checkbox" [(ngModel)]="excelSkipDuplicates" class="rounded text-indigo-600" />
+                  <span>{{ i18n.t('bank.skipDuplicates') }}</span>
+                </label>
+              </div>
+
+              <!-- Preview Table -->
+              <div class="border border-slate-200 rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+                <table class="w-full text-xs text-left rtl:text-right">
+                  <thead class="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] sticky top-0">
+                    <tr>
+                      <th class="p-2.5">#</th>
+                      <th class="p-2.5">{{ i18n.t('bank.colQuestion') }}</th>
+                      <th class="p-2.5">{{ i18n.t('bank.colAnswer') }}</th>
+                      <th class="p-2.5">{{ i18n.t('bank.colCategory') }}</th>
+                      <th class="p-2.5">{{ i18n.t('bank.colStatus') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    @for (row of res.validRows; track row.index) {
+                      <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-bold text-slate-500">{{ row.index }}</td>
+                        <td class="p-2.5 font-semibold text-slate-900 max-w-[200px] truncate" [title]="row.text">
+                          {{ row.text }}
+                        </td>
+                        <td class="p-2.5 text-emerald-700 font-bold max-w-[150px] truncate" [title]="row.answer">
+                          {{ row.answer }}
+                        </td>
+                        <td class="p-2.5 text-slate-600 font-medium">
+                          {{ row.category }}
+                        </td>
+                        <td class="p-2.5">
+                          @if (row.isDuplicate) {
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                              {{ i18n.t('bank.statusDuplicate') }}
+                            </span>
+                          } @else {
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              {{ i18n.t('bank.statusReady') }}
+                            </span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                    @for (bad of res.invalidRows; track bad.index) {
+                      <tr class="bg-red-50/50">
+                        <td class="p-2.5 font-bold text-red-500">{{ bad.index }}</td>
+                        <td class="p-2.5 text-red-700 font-medium" colspan="3">{{ bad.validationError }}</td>
+                        <td class="p-2.5">
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
+                            {{ i18n.t('bank.statusInvalid') }}
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0 bg-slate-50">
+          <button (click)="closeExcelModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200/50 rounded-xl cursor-pointer">
+            {{ i18n.t('classes.cancel') }}
+          </button>
+          @if (excelResult() && excelResult()!.validRows.length > 0) {
+            <button
+              (click)="executeExcelImport()"
+              class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer">
+              <i class="pi pi-check"></i>
+              <span>{{ i18n.t('bank.confirmImportBtn', { count: excelResult()!.validRows.length }) }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL 2: CREATE / EDIT BANK QUESTION MODAL                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  @if (showQuestionModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div class="bg-white max-w-xl w-full max-h-[90vh] flex flex-col rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i class="pi pi-database text-indigo-600"></i>
+            <span>{{ editingQuestionId() ? i18n.t('bank.editQuestion') : i18n.t('bank.addQuestionBtn') }}</span>
+          </h3>
+          <button (click)="closeQuestionModal()" class="text-slate-400 hover:text-slate-700 p-2 rounded-xl cursor-pointer">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto flex-1 space-y-4">
+          @if (questionFormError()) {
+            <div class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+              {{ questionFormError() }}
+            </div>
+          }
+
+          <!-- Category Field -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              {{ i18n.t('bank.categoryLabel') }}
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="formCategory"
+              placeholder="e.g., Science, Hardware, History"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold outline-none" />
+          </div>
+
+          <!-- Question Type Selector -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              {{ i18n.t('questions.typeLabel') }}
+            </label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
+                type="button"
+                (click)="formQuestionType = 'mcq'"
+                [class]="formQuestionType === 'mcq' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 font-medium'"
+                class="px-2.5 py-2 rounded-xl border text-xs text-center cursor-pointer transition-all">
+                {{ i18n.t('questions.typeMCQ') }}
+              </button>
+              <button
+                type="button"
+                (click)="formQuestionType = 'true_false'"
+                [class]="formQuestionType === 'true_false' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 font-medium'"
+                class="px-2.5 py-2 rounded-xl border text-xs text-center cursor-pointer transition-all">
+                {{ i18n.t('questions.typeTrueFalse') }}
+              </button>
+              <button
+                type="button"
+                (click)="formQuestionType = 'short_answer'"
+                [class]="formQuestionType === 'short_answer' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 font-medium'"
+                class="px-2.5 py-2 rounded-xl border text-xs text-center cursor-pointer transition-all">
+                {{ i18n.t('questions.typeShortAnswer') }}
+              </button>
+              <button
+                type="button"
+                (click)="formQuestionType = 'complete'"
+                [class]="formQuestionType === 'complete' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 font-medium'"
+                class="px-2.5 py-2 rounded-xl border text-xs text-center cursor-pointer transition-all">
+                {{ i18n.t('questions.typeComplete') }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Question Text -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              {{ i18n.t('questions.questionTextLabel') }}
+            </label>
+            <textarea
+              [(ngModel)]="formText"
+              rows="3"
+              [placeholder]="i18n.t('questions.questionTextPlaceholder')"
+              class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm font-medium outline-none resize-none"></textarea>
+          </div>
+
+          <!-- Type-specific options/answer -->
+          @if (formQuestionType === 'mcq') {
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {{ i18n.t('questions.optionsLabel') }}
+                </label>
+                <span class="text-[10px] text-slate-400 font-medium">{{ i18n.t('questions.optionsHint') }}</span>
+              </div>
+              <div class="space-y-2">
+                @for (opt of formOptions; track $index; let idx = $index) {
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      (click)="formCorrectIndex = idx"
+                      [class]="formCorrectIndex === idx ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'"
+                      class="w-8 h-8 rounded-lg border font-black text-xs flex items-center justify-center shrink-0 cursor-pointer transition-all">
+                      {{ ['A', 'B', 'C', 'D', 'E', 'F'][idx] }}
+                    </button>
+                    <input
+                      type="text"
+                      [(ngModel)]="opt.text"
+                      [placeholder]="'Option ' + ['A', 'B', 'C', 'D', 'E', 'F'][idx]"
+                      class="flex-1 px-3 py-2 rounded-xl bg-slate-50 border text-slate-900 text-xs outline-none font-medium"
+                      [class]="formCorrectIndex === idx ? 'border-emerald-300' : 'border-slate-200'" />
+                    @if (formOptions.length > 2) {
+                      <button type="button" (click)="removeOption(idx)" class="p-1.5 text-slate-400 hover:text-red-600">
+                        <i class="pi pi-trash text-xs"></i>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+              @if (formOptions.length < 6) {
+                <button
+                  type="button"
+                  (click)="addOption()"
+                  class="mt-2 text-xs text-indigo-600 hover:text-indigo-700 font-bold flex items-center gap-1 cursor-pointer">
+                  <i class="pi pi-plus text-[10px]"></i>
+                  <span>{{ i18n.t('questions.addOption') }}</span>
+                </button>
+              }
+            </div>
+          } @else if (formQuestionType === 'true_false') {
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                {{ i18n.t('questions.correctAnswerLabel') }}
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  (click)="formCorrectIndex = 0"
+                  [class]="formCorrectIndex === 0 ? 'bg-emerald-600 text-white border-emerald-600 font-bold' : 'bg-slate-50 text-slate-700 border-slate-200 font-medium'"
+                  class="p-2.5 rounded-xl border text-xs text-center cursor-pointer transition-all">
+                  {{ i18n.lang() === 'ar' ? 'صح' : 'True' }}
+                </button>
+                <button
+                  type="button"
+                  (click)="formCorrectIndex = 1"
+                  [class]="formCorrectIndex === 1 ? 'bg-emerald-600 text-white border-emerald-600 font-bold' : 'bg-slate-50 text-slate-700 border-slate-200 font-medium'"
+                  class="p-2.5 rounded-xl border text-xs text-center cursor-pointer transition-all">
+                  {{ i18n.lang() === 'ar' ? 'خطأ' : 'False' }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                  {{ i18n.t('questions.correctAnswerLabel') }}
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="formCorrectAnswer"
+                  [placeholder]="i18n.t('questions.correctAnswerPlaceholder')"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                  {{ i18n.t('questions.acceptedAnswersLabel') }}
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="formAcceptedAnswersText"
+                  [placeholder]="i18n.t('questions.acceptedAnswersPlaceholder')"
+                  class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs outline-none" />
+              </div>
+            </div>
+          }
+
+          <!-- Points & Timer -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                {{ i18n.t('questions.pointsLabel') }}
+              </label>
+              <input
+                type="number"
+                [(ngModel)]="formPoints"
+                min="5"
+                step="5"
+                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                {{ i18n.t('questions.timerLabel') }} (sec)
+              </label>
+              <input
+                type="number"
+                [(ngModel)]="formTimerSeconds"
+                min="10"
+                step="5"
+                class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0 bg-slate-50">
+          <button (click)="closeQuestionModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200/50 rounded-xl cursor-pointer">
+            {{ i18n.t('classes.cancel') }}
+          </button>
+          <button
+            (click)="saveQuestion()"
+            class="px-5 py-2 rounded-xl gradient-bg text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all cursor-pointer">
+            {{ editingQuestionId() ? i18n.t('teams.saveChanges') : i18n.t('bank.addQuestionBtn') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL 3: GROUP CREATE / EDIT MODAL                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  @if (showGroupModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div class="bg-white max-w-md w-full rounded-3xl border border-slate-200 shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-150">
+        <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <i class="pi pi-folder text-indigo-600"></i>
+          <span>{{ editingGroupId() ? i18n.t('bank.editGroup') : i18n.t('bank.addGroup') }}</span>
+        </h3>
+
+        @if (groupFormError()) {
+          <div class="p-3 mb-3 rounded-xl bg-red-50 text-red-700 text-xs font-semibold">
+            {{ groupFormError() }}
+          </div>
+        }
+
+        <div class="space-y-3 mb-5">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+              {{ i18n.t('bank.groupNameLabel') }}
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="groupFormName"
+              placeholder="e.g., Group 4 / Grade 4"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-semibold outline-none" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+              {{ i18n.t('bank.groupDescLabel') }}
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="groupFormDesc"
+              placeholder="Optional description"
+              class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs outline-none" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button (click)="closeGroupModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer">
+            {{ i18n.t('classes.cancel') }}
+          </button>
+          <button
+            (click)="saveGroup()"
+            class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md cursor-pointer">
+            {{ i18n.t('teams.saveChanges') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL 4: BULK MOVE QUESTIONS TO ANOTHER GROUP                      -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  @if (showMoveModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div class="bg-white max-w-sm w-full rounded-3xl border border-slate-200 shadow-2xl p-6">
+        <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <i class="pi pi-folder-move text-indigo-600"></i>
+          <span>{{ i18n.t('bank.moveModalTitle') }}</span>
+        </h3>
+        <p class="text-xs text-slate-500 mb-4">
+          {{ i18n.t('bank.moveModalDesc', { count: selectedQuestionIds().size }) }}
+        </p>
+
+        <select
+          [(ngModel)]="moveTargetGroupId"
+          class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold outline-none mb-5">
+          @for (grp of groups(); track grp.id) {
+            @if (grp.id !== selectedGroupId()) {
+              <option [value]="grp.id">{{ grp.name }}</option>
+            }
+          }
+        </select>
+
+        <div class="flex items-center justify-end gap-2">
+          <button (click)="closeMoveModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer">
+            {{ i18n.t('classes.cancel') }}
+          </button>
+          <button
+            (click)="executeMove()"
+            class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md cursor-pointer">
+            {{ i18n.t('bank.moveBtnConfirm') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

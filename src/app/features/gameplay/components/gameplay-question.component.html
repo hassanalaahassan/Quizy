@@ -63,14 +63,14 @@
               <div
                 (click)="teacherSelectAnswer(optIdx)"
                 [class]="getOptionCardClass(optIdx)"
-                class="p-4 sm:p-5 md:p-6 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 sm:gap-4 group shadow-sm hover:shadow-md">
-                <div class="flex items-center gap-3 sm:gap-4">
+                class="p-4 sm:p-5 md:p-6 rounded-2xl border text-left rtl:text-right transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 sm:gap-4 group shadow-2xs hover:shadow-xs min-w-0">
+                <div class="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                   <div
                     [class]="getOptionBadgeClass(optIdx)"
-                    class="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl font-black text-base sm:text-lg md:text-xl flex items-center justify-center shrink-0 shadow-xs transition-transform group-hover:scale-105">
+                    class="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl font-black text-base sm:text-lg md:text-xl flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105">
                     {{ ['A', 'B', 'C', 'D', 'E', 'F'][optIdx] }}
                   </div>
-                  <span class="text-sm sm:text-base md:text-xl font-bold text-slate-900">
+                  <span class="text-sm sm:text-base md:text-xl font-bold text-slate-900 break-words flex-1 min-w-0">
                     {{ opt.text }}
                   </span>
                 </div>
@@ -78,12 +78,12 @@
                 <!-- Evaluated outcome icon -->
                 @if (isAnswerSubmitted()) {
                   @if (optIdx === q.correctOptionIndex) {
-                    <span class="px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500 text-white font-black text-xs uppercase flex items-center gap-1 shrink-0 shadow-xs">
-                      <i class="pi pi-check"></i> {{ i18n.t('gameplay.correct') }}
+                    <span class="px-2.5 sm:px-3 py-1 rounded-full bg-emerald-600 text-white font-black text-xs uppercase flex items-center gap-1 shrink-0 shadow-2xs">
+                      <i class="pi pi-check text-xs"></i> <span class="truncate">{{ i18n.t('gameplay.correct') }}</span>
                     </span>
                   } @else if (lastOutcome()?.selectedOptionIndex === optIdx && !lastOutcome()?.isCorrect) {
-                    <span class="px-2.5 sm:px-3 py-1 rounded-full bg-red-500 text-white font-black text-xs uppercase flex items-center gap-1 shrink-0 shadow-xs">
-                      <i class="pi pi-times"></i> {{ i18n.t('gameplay.studentChoice') }}
+                    <span class="px-2.5 sm:px-3 py-1 rounded-full bg-red-600 text-white font-black text-xs uppercase flex items-center gap-1 shrink-0 shadow-2xs">
+                      <i class="pi pi-times text-xs"></i> <span class="truncate">{{ i18n.t('gameplay.studentChoice') }}</span>
                     </span>
                   }
                 }
@@ -93,25 +93,25 @@
 
           <!-- Teacher Direct Verdict Action Bar for MCQ/TF -->
           @if (!isAnswerSubmitted()) {
-            <div class="mt-3 sm:mt-4 p-3 rounded-2xl bg-white/80 border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-2">
-              <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <i class="pi pi-check-circle text-indigo-500"></i>
-                <span>{{ i18n.t('gameplay.teacherVerdict') }}</span>
+            <div class="mt-3 sm:mt-4 p-3 rounded-2xl bg-white/90 border border-[#e8e6e0] shadow-2xs flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                <i class="pi pi-check-circle text-[#0b6c62]"></i>
+                <span class="truncate">{{ i18n.t('gameplay.teacherVerdict') }}</span>
               </span>
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   (click)="submitVerdict(true)"
-                  class="px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5">
-                  <i class="pi pi-check text-xs"></i>
-                  <span>{{ i18n.t('gameplay.submitAsRight') }}</span>
+                  class="px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs hover:shadow-xs transition-all cursor-pointer flex items-center gap-1.5 min-w-0">
+                  <i class="pi pi-check text-xs shrink-0"></i>
+                  <span class="truncate">{{ i18n.t('gameplay.submitAsRight') }}</span>
                 </button>
                 <button
                   type="button"
                   (click)="submitVerdict(false)"
-                  class="px-3 sm:px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5">
-                  <i class="pi pi-times text-xs"></i>
-                  <span>{{ i18n.t('gameplay.submitAsWrong') }}</span>
+                  class="px-3 sm:px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 min-w-0">
+                  <i class="pi pi-times text-xs shrink-0"></i>
+                  <span class="truncate">{{ i18n.t('gameplay.submitAsWrong') }}</span>
                 </button>
               </div>
             </div>

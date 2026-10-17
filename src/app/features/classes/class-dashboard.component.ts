@@ -7,11 +7,11 @@ import { SessionService } from '../../core/services/session.service';
 import { QuestionService } from '../../core/services/question.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { SessionStatus } from '../../core/models/session.model';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import { NavbarComponent, NavAction } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-class-dashboard',
-  imports: [LanguageSwitcherComponent],
+  imports: [NavbarComponent],
   templateUrl: './class-dashboard.component.html',
 })
 export class ClassDashboardComponent implements OnInit {
@@ -24,6 +24,30 @@ export class ClassDashboardComponent implements OnInit {
   private sessionService = inject(SessionService);
   private questionService = inject(QuestionService);
   private confirmationService = inject(ConfirmationService);
+
+  readonly navActions = computed<NavAction[]>(() => [
+    {
+      label: this.i18n.t('dashboard.manageTeams'),
+      icon: 'pi pi-users',
+      badge: `${this.teams().length}`,
+      callback: () => this.goToTeams(),
+      style: 'secondary',
+    },
+    {
+      label: this.i18n.t('dashboard.manageQuestions'),
+      icon: 'pi pi-question-circle',
+      badge: `${this.questions().length}`,
+      callback: () => this.goToQuestions(),
+      style: 'secondary',
+    },
+    {
+      label: this.i18n.t('dashboard.newSession'),
+      icon: 'pi pi-play',
+      callback: () => this.goToNewSession(),
+      style: 'primary',
+      hideOnMobile: false,
+    },
+  ]);
 
   readonly currentClass = computed(() => {
     return this.classService.classes().find(c => c.id === this.classId()) ?? null;

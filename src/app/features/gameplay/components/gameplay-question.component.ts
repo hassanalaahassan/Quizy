@@ -48,35 +48,52 @@ export class GameplayQuestionComponent {
 
   getOptionCardClass(optIdx: number): string {
     if (!this.isAnswerSubmitted()) {
-      return 'bg-slate-50 border-slate-200 hover:border-indigo-300 hover:bg-white text-slate-700';
+      const cardHoverBorders = [
+        'hover:border-rose-300 hover:bg-rose-50/20',
+        'hover:border-sky-300 hover:bg-sky-50/20',
+        'hover:border-amber-300 hover:bg-amber-50/20',
+        'hover:border-emerald-300 hover:bg-emerald-50/20',
+        'hover:border-purple-300 hover:bg-purple-50/20',
+        'hover:border-pink-300 hover:bg-pink-50/20',
+      ];
+      const hover = cardHoverBorders[optIdx % cardHoverBorders.length];
+      return `bg-white border-[#e8e6e0] ${hover} text-slate-900`;
     }
 
     const isCorrect = optIdx === this.currentQuestion()?.correctOptionIndex;
     const isSelected = this.lastOutcome()?.selectedOptionIndex === optIdx;
 
     if (isCorrect) {
-      return 'bg-emerald-50 border-emerald-400 text-emerald-900 ring-2 ring-emerald-400/50';
+      return 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-500/40 shadow-xs';
     } else if (isSelected) {
-      return 'bg-red-50 border-red-400 text-red-900 ring-2 ring-red-400/50';
+      return 'bg-red-50 border-red-500 text-red-950 ring-2 ring-red-500/40 shadow-xs';
     } else {
-      return 'bg-slate-50/50 border-slate-200 text-slate-400 opacity-60';
+      return 'bg-slate-50/60 border-[#e8e6e0] text-slate-400 opacity-40';
     }
   }
 
   getOptionBadgeClass(optIdx: number): string {
     if (!this.isAnswerSubmitted()) {
-      return 'bg-slate-200 text-slate-600';
+      const bullets = [
+        'bg-rose-500 text-white shadow-xs shadow-rose-500/30',
+        'bg-sky-500 text-white shadow-xs shadow-sky-500/30',
+        'bg-amber-500 text-white shadow-xs shadow-amber-500/30',
+        'bg-emerald-500 text-white shadow-xs shadow-emerald-500/30',
+        'bg-purple-500 text-white shadow-xs shadow-purple-500/30',
+        'bg-pink-500 text-white shadow-xs shadow-pink-500/30',
+      ];
+      return bullets[optIdx % bullets.length];
     }
 
     const isCorrect = optIdx === this.currentQuestion()?.correctOptionIndex;
     const isSelected = this.lastOutcome()?.selectedOptionIndex === optIdx;
 
     if (isCorrect) {
-      return 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30';
+      return 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-white';
     } else if (isSelected) {
-      return 'bg-red-500 text-white shadow-md shadow-red-500/30';
+      return 'bg-red-600 text-white shadow-md shadow-red-600/30 ring-2 ring-white';
     } else {
-      return 'bg-slate-200 text-slate-500';
+      return 'bg-slate-200 text-slate-400';
     }
   }
 
@@ -88,7 +105,7 @@ export class GameplayQuestionComponent {
         icon: 'info',
         title: this.i18n.t('gameplay.step1Title'),
         text: this.i18n.t('gameplay.selectTeamFirst'),
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#0b6c62',
         timer: 2500,
         showConfirmButton: false,
         toast: true,
@@ -108,7 +125,7 @@ export class GameplayQuestionComponent {
         icon: 'info',
         title: this.i18n.t('gameplay.step1Title'),
         text: this.i18n.t('gameplay.selectTeamFirst'),
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#0b6c62',
         timer: 2500,
         showConfirmButton: false,
         toast: true,
@@ -132,7 +149,7 @@ export class GameplayQuestionComponent {
         icon: 'info',
         title: this.i18n.t('gameplay.step1Title'),
         text: this.i18n.t('gameplay.selectTeamFirst'),
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#0b6c62',
         timer: 2500,
         showConfirmButton: false,
         toast: true,

@@ -1,11 +1,11 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { I18nService } from '../../core/services/i18n.service';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-instructions',
-  imports: [LanguageSwitcherComponent],
+  imports: [NavbarComponent],
   templateUrl: './instructions.component.html',
 })
 export class InstructionsComponent {

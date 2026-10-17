@@ -1,44 +1,45 @@
-/* Quiziyyy Global Styles — Modern Educational Light Theme */
+/* Quiziyyy Global Styles — Premium Educational Platform */
 @import 'tailwindcss';
 
 /* ============================================================
-   DESIGN TOKENS — LIGHT THEME
+   DESIGN TOKENS — REFINED WARM-PROFESSIONAL PALETTE
    ============================================================ */
 
 @theme {
-  /* Brand / Primary Palette (Vibrant Educational Indigo) */
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
-  --color-primary-950: #1e1b4b;
+  /* Brand / Primary Palette (Rich Teal-Blue — professional, fresh, not generic) */
+  --color-primary-50: #effcf9;
+  --color-primary-100: #c8f7ec;
+  --color-primary-200: #91eeda;
+  --color-primary-300: #52dec4;
+  --color-primary-400: #23c9ab;
+  --color-primary-500: #0ea891;
+  --color-primary-600: #088777;
+  --color-primary-700: #0b6c62;
+  --color-primary-800: #0d574f;
+  --color-primary-900: #104843;
+  --color-primary-950: #022c29;
 
-  /* Accent Colors */
-  --color-accent-green: #10b981;
-  --color-accent-red: #ef4444;
+  /* Accent Colors — warm & distinguishable */
+  --color-accent-green: #22c55e;
+  --color-accent-red: #f43f5e;
   --color-accent-amber: #f59e0b;
   --color-accent-cyan: #06b6d4;
-  --color-accent-pink: #ec4899;
+  --color-accent-pink: #e879a5;
+  --color-accent-violet: #8b5cf6;
 
-  /* Surface Colors (Clean Educational Light Palette) */
-  --color-surface-900: #f8fafc; /* Page Background */
-  --color-surface-850: #f1f5f9; /* Sub-surface */
+  /* Surface Colors (Warm off-white with depth) */
+  --color-surface-900: #fafaf8; /* Page Background — warm white */
+  --color-surface-850: #f5f4f0; /* Sub-surface */
   --color-surface-800: #ffffff; /* Card Background */
-  --color-surface-750: #f8fafc; /* Card hover / input background */
-  --color-surface-700: #e2e8f0; /* Borders */
-  --color-surface-600: #cbd5e1; /* Subtle border */
-  --color-surface-500: #94a3b8; /* Muted border */
+  --color-surface-750: #faf9f7; /* Card hover / input background */
+  --color-surface-700: #e8e6e0; /* Borders */
+  --color-surface-600: #d5d2ca; /* Subtle border */
+  --color-surface-500: #a8a49a; /* Muted border */
 
   /* Text Colors */
-  --color-text-primary: #0f172a;   /* High contrast slate-900 */
-  --color-text-secondary: #475569; /* Readable slate-600 */
-  --color-text-muted: #94a3b8;     /* Slate-400 */
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #555550;
+  --color-text-muted: #9c9890;
 
   /* Fonts */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -53,16 +54,40 @@
 }
 
 /* ============================================================
+   CSS CUSTOM PROPERTIES (for vanilla CSS components)
+   ============================================================ */
+:root {
+  /* Brand token system for shared components */
+  --color-brand: #0b6c62;
+  --color-brand-light: #0ea891;
+  --color-brand-surface: #effcf9;
+  --color-brand-surface-hover: #c8f7ec;
+  --color-brand-border: #91eeda;
+  --color-brand-shadow: rgba(14, 168, 145, 0.2);
+  --gradient-brand: linear-gradient(135deg, #0b6c62 0%, #0ea891 50%, #06b6d4 100%);
+  --gradient-brand-subtle: linear-gradient(135deg, #effcf9 0%, #f0fdf4 100%);
+
+  /* Surface tokens */
+  --color-surface-card: #ffffff;
+  --color-surface-page: #fafaf8;
+  --color-surface-hover: #f5f4f0;
+  --color-border: #e8e6e0;
+  --color-border-hover: #d5d2ca;
+}
+
+/* ============================================================
    BASE & TYPOGRAPHY
    ============================================================ */
 
 html, body {
-  background-color: var(--color-surface-900);
+  background-color: var(--color-surface-page);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Arabic typography when RTL */
@@ -70,69 +95,69 @@ html, body {
   font-family: var(--font-arabic) !important;
 }
 
-/* Scrollbar styling for light theme */
+/* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d5d2ca;
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #a8a49a;
 }
 
 /* ============================================================
-   UTILITY CLASSES (LIGHT THEME)
+   UTILITY CLASSES
    ============================================================ */
 
 .glass {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px) saturate(1.6);
+  border: 1px solid rgba(232, 230, 224, 0.8);
 }
 
 .glass-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e6e0;
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -2px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .glass-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+  border-color: #d5d2ca;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  background: linear-gradient(135deg, #0b6c62, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gradient-bg {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  background: linear-gradient(135deg, #0b6c62 0%, #0ea891 50%, #06b6d4 100%);
 }
 
 .glow {
-  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 4px 20px rgba(14, 168, 145, 0.2);
 }
 
 .glow-green {
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2);
 }
 
 .glow-red {
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.25);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.2);
 }
 
 /* RTL Icon auto-flip utility for directional arrows */
@@ -141,20 +166,37 @@ html, body {
 }
 
 /* ============================================================
-   PRIMENG LIGHT THEME STYLING
+   GLOBAL BUTTON SAFETY — prevent text overflow everywhere
+   ============================================================ */
+
+button, [role="button"], .btn {
+  max-width: 100%;
+  min-width: 0;
+}
+
+button:not(.btn-multiline) > span:not(.no-truncate),
+[role="button"]:not(.btn-multiline) > span:not(.no-truncate) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ============================================================
+   PRIMENG STYLING OVERRIDES
    ============================================================ */
 
 .p-confirmdialog {
   max-width: 28rem;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
-  border: 1px solid var(--color-surface-700);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--color-border);
 }
 
 .p-confirmdialog .p-dialog-header {
   padding: 1.5rem 2rem 1rem 2rem;
-  border-bottom: 1px solid var(--color-surface-850);
+  border-bottom: 1px solid #f5f4f0;
 }
 
 .p-confirmdialog .p-dialog-content {
@@ -169,8 +211,8 @@ html, body {
 
 .p-confirmdialog .p-dialog-footer {
   padding: 1.25rem 2rem;
-  border-top: 1px solid var(--color-surface-850);
-  background-color: var(--color-surface-900);
+  border-top: 1px solid #f5f4f0;
+  background-color: #fafaf8;
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
@@ -187,24 +229,24 @@ html, body {
 }
 
 .p-confirmdialog .p-button-danger {
-  background-color: var(--color-accent-red);
+  background-color: #f43f5e;
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(244, 63, 94, 0.2);
 }
 
 .p-confirmdialog .p-button-danger:hover {
-  background-color: #dc2626;
+  background-color: #e11d48;
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.25);
 }
 
 .p-confirmdialog .p-button-secondary.p-button-text {
-  background-color: var(--color-surface-700);
+  background-color: #e8e6e0;
   color: var(--color-text-secondary);
 }
 
 .p-confirmdialog .p-button-secondary.p-button-text:hover {
-  background-color: var(--color-surface-600);
+  background-color: #d5d2ca;
   color: var(--color-text-primary);
 }
 
@@ -221,8 +263,8 @@ html, body {
 }
 
 .p-dialog-mask {
-  background: rgba(15, 23, 42, 0.45) !important;
-  backdrop-filter: blur(4px);
+  background: rgba(26, 26, 26, 0.35) !important;
+  backdrop-filter: blur(6px);
 }
 
 .p-dialog {
@@ -232,6 +274,29 @@ html, body {
 
 .p-toast {
   z-index: 9999;
+}
+
+/* ============================================================
+   RESPONSIVE SAFETY UTILITIES
+   ============================================================ */
+
+/* Ensure no horizontal overflow at the page level */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Safe text truncation utility */
+.truncate-safe {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Flex child that won't blow out its container */
+.flex-safe {
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Respect reduced motion */

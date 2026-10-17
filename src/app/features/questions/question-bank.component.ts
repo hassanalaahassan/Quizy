@@ -4,14 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
 import { ClassService } from '../../core/services/class.service';
 import { QuestionService } from '../../core/services/question.service';
+import { QuestionBankService } from '../../core/services/question-bank.service';
+import { ExcelService } from '../../core/services/excel.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { PenaltyMode, Question, QuestionOption, QuestionType } from '../../core/models/question.model';
+import { BankQuestion, QuestionGroup } from '../../core/models/question-bank.model';
 import { formatTimer, fromTotalSeconds, toTotalSeconds } from '../../core/utils';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import { NavbarComponent, NavAction } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-question-bank',
-  imports: [FormsModule, LanguageSwitcherComponent],
+  imports: [FormsModule, NavbarComponent],
   templateUrl: './question-bank.component.html',
 })
 export class QuestionBankComponent implements OnInit {
@@ -21,19 +24,92 @@ export class QuestionBankComponent implements OnInit {
   private router = inject(Router);
   private classService = inject(ClassService);
   private questionService = inject(QuestionService);
+  private bankService = inject(QuestionBankService);
+  private excelService = inject(ExcelService);
   private confirmationService = inject(ConfirmationService);
+
+  readonly navActions = computed<NavAction[]>(() => {
+    const list: NavAction[] = [];
+    if (this.questions().length > 0) {
+      list.push({
+        label: this.i18n.t('bank.exportExcelBtn'),
+        icon: 'pi pi-download',
+        callback: () => this.exportQuestionsToExcel(),
+        style: 'ghost',
+      });
+    }
+    list.push(
+      {
+        label: this.i18n.t('bank.importFromBankBtn'),
+        icon: 'pi pi-database',
+        callback: () => this.openImportModal(),
+        style: 'secondary',
+      },
+      {
+        label: this.i18n.t('questions.createQuestion'),
+        icon: 'pi pi-plus',
+        callback: () => this.openCreateModal(),
+        style: 'primary',
+        hideOnMobile: false,
+      }
+    );
+    return list;
+  });
 
   readonly currentClass = computed(() => {
     return this.classService.classes().find(c => c.id === this.classId()) ?? null;
   });
 
   readonly questions = this.questionService.questions;
+  readonly groups = this.bankService.groups;
 
   readonly showModal = signal(false);
   readonly editingQuestionId = signal<string | null>(null);
   readonly formError = signal('');
 
+  // ── Import from Bank Modal State ──────────────────────────
+  readonly showImportModal = signal(false);
+  readonly importTargetGroupId = signal<string>('');
+  readonly importSearchQuery = signal<string>('');
+  readonly importCategoryFilter = signal<string | null>(null);
+  readonly selectedBankQuestionIds = signal<Set<string>>(new Set());
+  readonly importSuccessMessage = signal<string | null>(null);
+
+  readonly availableBankQuestions = computed(() => {
+    const grpId = this.importTargetGroupId();
+    if (!grpId) return [];
+    let list = this.bankService.bankQuestions().filter(q => q.groupId === grpId);
+
+    const cat = this.importCategoryFilter();
+    if (cat) {
+      list = list.filter(q => (q.category || 'General').toLowerCase() === cat.toLowerCase());
+    }
+
+    const query = this.importSearchQuery().trim().toLowerCase();
+    if (query) {
+      list = list.filter(q =>
+        q.text.toLowerCase().includes(query) ||
+        (q.category || '').toLowerCase().includes(query) ||
+        (q.correctAnswer || '').toLowerCase().includes(query)
+      );
+    }
+    return list;
+  });
+
+  readonly importCategories = computed(() => {
+    const grpId = this.importTargetGroupId();
+    if (!grpId) return [];
+    const set = new Set<string>();
+    this.bankService.bankQuestions()
+      .filter(q => q.groupId === grpId)
+      .forEach(q => {
+        if (q.category) set.add(q.category.trim());
+      });
+    return Array.from(set).sort();
+  });
+
   formQuestionType: QuestionType = 'mcq';
+  formCategory = 'General';
   formText = '';
   formOptions: QuestionOption[] = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
   formCorrectIndex = 0;
@@ -61,6 +137,7 @@ export class QuestionBankComponent implements OnInit {
     this.editingQuestionId.set(null);
     this.formError.set('');
     this.formQuestionType = 'mcq';
+    this.formCategory = 'General';
     this.formText = '';
     this.formOptions = [{ text: '' }, { text: '' }, { text: '' }, { text: '' }];
     this.formCorrectIndex = 0;
@@ -78,6 +155,7 @@ export class QuestionBankComponent implements OnInit {
     this.editingQuestionId.set(q.id);
     this.formError.set('');
     this.formQuestionType = q.questionType || 'mcq';
+    this.formCategory = q.category || 'General';
     this.formText = q.text;
     this.formOptions = q.options.length > 0 ? q.options.map(o => ({ ...o })) : [{ text: '' }, { text: '' }];
     this.formCorrectIndex = q.correctOptionIndex >= 0 ? q.correctOptionIndex : 0;
@@ -175,6 +253,7 @@ export class QuestionBankComponent implements OnInit {
         this.questionService.updateQuestion({
           id: editId,
           classId: this.classId(),
+          category: this.formCategory.trim() || 'General',
           questionType: qType,
           text,
           options: filledOptions,
@@ -190,6 +269,7 @@ export class QuestionBankComponent implements OnInit {
       } else {
         this.questionService.createQuestion({
           classId: this.classId(),
+          category: this.formCategory.trim() || 'General',
           questionType: qType,
           text,
           options: filledOptions,
@@ -346,5 +426,96 @@ export class QuestionBankComponent implements OnInit {
         ...s,
       });
     }
+  }
+
+  // ── Import from Central Bank ──────────────────────────────
+
+  isAlreadyImported(bq: BankQuestion): boolean {
+    const text = bq.text.trim().toLowerCase();
+    return this.questions().some(
+      q => q.sourceBankQuestionId === bq.id || q.text.trim().toLowerCase() === text
+    );
+  }
+
+  openImportModal(): void {
+    this.importSuccessMessage.set(null);
+    this.selectedBankQuestionIds.set(new Set());
+    this.importCategoryFilter.set(null);
+    this.importSearchQuery.set('');
+
+    const cls = this.currentClass();
+    const grps = this.groups();
+    const targetId = cls?.groupId || (grps.length > 0 ? grps[0].id : '');
+    this.importTargetGroupId.set(targetId);
+    if (targetId) {
+      this.bankService.loadBankQuestions(targetId);
+    }
+    this.showImportModal.set(true);
+  }
+
+  closeImportModal(): void {
+    this.showImportModal.set(false);
+    this.selectedBankQuestionIds.set(new Set());
+    this.importSuccessMessage.set(null);
+  }
+
+  onImportGroupChange(groupId: string): void {
+    this.importTargetGroupId.set(groupId);
+    this.selectedBankQuestionIds.set(new Set());
+    this.importCategoryFilter.set(null);
+    this.bankService.loadBankQuestions(groupId);
+  }
+
+  toggleSelectBankQuestion(id: string): void {
+    const set = new Set(this.selectedBankQuestionIds());
+    if (set.has(id)) {
+      set.delete(id);
+    } else {
+      set.add(id);
+    }
+    this.selectedBankQuestionIds.set(set);
+  }
+
+  toggleSelectAllBankQuestions(): void {
+    const importable = this.availableBankQuestions().filter(q => !this.isAlreadyImported(q));
+    const current = this.selectedBankQuestionIds();
+    if (current.size === importable.length && importable.length > 0) {
+      this.selectedBankQuestionIds.set(new Set());
+    } else {
+      this.selectedBankQuestionIds.set(new Set(importable.map(q => q.id)));
+    }
+  }
+
+  executeImport(): void {
+    const ids = this.selectedBankQuestionIds();
+    if (ids.size === 0) return;
+
+    const bankList = this.availableBankQuestions().filter(q => ids.has(q.id));
+    const importedCount = this.questionService.importQuestionsFromBank(this.classId(), bankList);
+
+    this.importSuccessMessage.set(
+      `Successfully imported ${importedCount} questions from ${this.getGroupName(this.importTargetGroupId())}!`
+    );
+    this.selectedBankQuestionIds.set(new Set());
+    setTimeout(() => {
+      this.closeImportModal();
+    }, 1200);
+  }
+
+  getGroupName(groupId: string): string {
+    return this.groups().find(g => g.id === groupId)?.name || 'Group';
+  }
+
+  // ── Classroom Excel Export ────────────────────────────────
+
+  exportQuestionsToExcel(): void {
+    const questions = this.questions();
+    if (questions.length === 0) return;
+    const title = (this.currentClass()?.name || 'Classroom') + '_Questions';
+    this.excelService.exportQuestions(questions, title);
+  }
+
+  downloadSampleTemplate(): void {
+    this.excelService.downloadTemplate();
   }
 }

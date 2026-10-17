@@ -7,12 +7,12 @@ import { TeamService, TeamWithDetails } from '../../core/services/team.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { TeamMember } from '../../core/models/team.model';
 import { generateId } from '../../core/utils';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher.component';
+import { NavbarComponent, NavAction } from '../../shared/components/navbar/navbar.component';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-team-management',
-  imports: [FormsModule, LanguageSwitcherComponent],
+  imports: [FormsModule, NavbarComponent],
   templateUrl: './team-management.component.html',
 })
 export class TeamManagementComponent implements OnInit {
@@ -23,6 +23,28 @@ export class TeamManagementComponent implements OnInit {
   private classService = inject(ClassService);
   private teamService = inject(TeamService);
   private confirmationService = inject(ConfirmationService);
+
+  readonly navActions = computed<NavAction[]>(() => [
+    {
+      label: this.i18n.t('teams.addTeam'),
+      icon: 'pi pi-plus',
+      callback: () => this.openAddTeamModal(),
+      style: 'primary',
+      hideOnMobile: false,
+    },
+  ]);
+
+  getTeamColor(index: number) {
+    const palette = [
+      { bullet: 'bg-rose-500', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', ring: 'ring-rose-200' },
+      { bullet: 'bg-sky-500', bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', ring: 'ring-sky-200' },
+      { bullet: 'bg-amber-500', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', ring: 'ring-amber-200' },
+      { bullet: 'bg-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', ring: 'ring-emerald-200' },
+      { bullet: 'bg-purple-500', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', ring: 'ring-purple-200' },
+      { bullet: 'bg-teal-500', bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200', ring: 'ring-teal-200' },
+    ];
+    return palette[index % palette.length];
+  }
 
   readonly currentClass = computed(() => {
     return this.classService.classes().find(c => c.id === this.classId()) ?? null;

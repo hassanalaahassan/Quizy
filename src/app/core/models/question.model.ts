@@ -47,6 +47,12 @@ export interface Question {
   timerSeconds: number;
   penaltyMode: PenaltyMode;
 
+  /** Optional category or subject area (e.g., 'Science', 'History', 'Hardware'). */
+  category?: string;
+
+  /** Link back to the central bank question this was imported from, if applicable. */
+  sourceBankQuestionId?: string;
+
   /** If true, a correct answer rewards the team with a random Green Card. */
   isGreenCardReward: boolean;
   createdAt: number;

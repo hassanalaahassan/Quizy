@@ -1,7 +1,13 @@
 // Core domain models — barrel export
 export type { GameClass } from './game-class.model';
 export type { Team, TeamMember } from './team.model';
-export type { Question, QuestionOption, PenaltyMode } from './question.model';
+export type { Question, QuestionOption, PenaltyMode, QuestionType } from './question.model';
+export type {
+  QuestionGroup,
+  BankQuestion,
+  ExcelQuestionRow,
+  ExcelImportSummary,
+} from './question-bank.model';
 export type {
   Session,
   SessionStatus,

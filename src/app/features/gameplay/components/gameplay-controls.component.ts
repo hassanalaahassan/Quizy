@@ -36,6 +36,18 @@ export class GameplayControlsComponent {
 
   onSkipQuestion = output<void>();
 
+  getTeamColor(index: number) {
+    const palette = [
+      { bullet: 'bg-rose-500', selectedBg: 'bg-rose-600', ring: 'ring-rose-400' },
+      { bullet: 'bg-sky-500', selectedBg: 'bg-sky-600', ring: 'ring-sky-400' },
+      { bullet: 'bg-amber-500', selectedBg: 'bg-amber-600', ring: 'ring-amber-400' },
+      { bullet: 'bg-emerald-500', selectedBg: 'bg-emerald-600', ring: 'ring-emerald-400' },
+      { bullet: 'bg-purple-500', selectedBg: 'bg-purple-600', ring: 'ring-purple-400' },
+      { bullet: 'bg-teal-500', selectedBg: 'bg-teal-600', ring: 'ring-teal-400' },
+    ];
+    return palette[index % palette.length];
+  }
+
   openAdjustScoreModal(teamId?: string): void {
     this.customDeltaValue = null;
     this.customExactScore = null;

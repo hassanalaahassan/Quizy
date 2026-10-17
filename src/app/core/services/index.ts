@@ -7,3 +7,5 @@ export { TimerService } from './timer.service';
 export { GameplayService, type EvaluationOutcome } from './gameplay.service';
 export { GreenCardService, type CardAssignResult, type StealResult } from './green-card.service';
 export { I18nService, type Language, type Direction } from './i18n.service';
+export { QuestionBankService, type CreateBankQuestionDto } from './question-bank.service';
+export { ExcelService, type ParsedRowResult, type ExcelParseResult } from './excel.service';
